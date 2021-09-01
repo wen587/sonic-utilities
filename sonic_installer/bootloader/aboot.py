@@ -164,6 +164,9 @@ class AbootBootloader(Bootloader):
         return IMAGE_PREFIX + version.strip()
 
     def verify_binary_image(self, image_path):
+        return os.path.isfile(image_path)
+
+    def verify_secureboot_image(self, image_path):
         try:
             subprocess.check_call(['/usr/bin/unzip', '-tq', image_path])
             return self._verify_secureboot_image(image_path)
