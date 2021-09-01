@@ -15,6 +15,7 @@ from ..common import (
    run_command,
 )
 from .onie import OnieInstallerBootloader
+from .onie import default_sigpipe
 
 class GrubBootloader(OnieInstallerBootloader):
 
@@ -80,6 +81,30 @@ class GrubBootloader(OnieInstallerBootloader):
 
         run_command('grub-set-default --boot-directory=' + HOST_PATH + ' 0')
         click.echo('Image removed')
+
+    def verify_binary_image(self, image_path):
+        if not os.path.isfile(image_path):
+            return False
+
+        # Get running platform's ASIC
+        sonic_version_yml = open('/etc/sonic/sonic_version.yml', 'r')
+        asic_type = re.search(r"asic_type: (\S+)", sonic_version_yml.read()).group(1)
+        sonic_version_yml.close()
+        # click.echo('Get running platform ASIC... %s' % asic_type)
+
+        # Get installing image's ASIC
+        p1 = subprocess.Popen(["cat", "-v", image_path], stdout=subprocess.PIPE, preexec_fn=default_sigpipe)
+        p2 = subprocess.Popen(["grep", "-m 1", "^image_asic"], stdin=p1.stdout, stdout=subprocess.PIPE, preexec_fn=default_sigpipe)
+        p3 = subprocess.Popen(["sed", "-n", r"s/^image_asic=\"\(.*\)\"$/\1/p"], stdin=p2.stdout, stdout=subprocess.PIPE, preexec_fn=default_sigpipe, text=True)
+
+        stdout = p3.communicate()[0]
+        p3.wait()
+        image_asic = stdout.rstrip('\n')
+        # click.echo('Get installing images ASIC... %s' % image_asic)
+
+        if asic_type == image_asic:
+            return True
+        return False
 
     @classmethod
     def detect(cls):

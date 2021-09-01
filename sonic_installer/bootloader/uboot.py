@@ -77,6 +77,9 @@ class UbootBootloader(OnieInstallerBootloader):
         subprocess.call(['rm','-rf', HOST_PATH + '/' + image_dir])
         click.echo('Done')
 
+    def verify_binary_image(self, image_path):
+        return os.path.isfile(image_path)
+
     @classmethod
     def detect(cls):
         arch = platform.machine()
