@@ -102,6 +102,10 @@ class GrubBootloader(OnieInstallerBootloader):
         image_asic = stdout.rstrip('\n')
         # click.echo('Get installing images ASIC... %s' % image_asic)
 
+        # Backword compatibility if IMAGE_ASIC not set in install.sh
+        if not image_asic:
+            return True
+
         if asic_type == image_asic:
             return True
         return False
