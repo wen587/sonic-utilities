@@ -8,6 +8,7 @@ import subprocess
 
 import click
 
+from sonic_py_common import device_info
 from ..common import (
    HOST_PATH,
    IMAGE_DIR_PREFIX,
@@ -82,14 +83,19 @@ class GrubBootloader(OnieInstallerBootloader):
         run_command('grub-set-default --boot-directory=' + HOST_PATH + ' 0')
         click.echo('Image removed')
 
-    def verify_binary_image(self, image_path):
+    def verify_image_platform(self, image_path):
         if not os.path.isfile(image_path):
             return False
 
         # Get running platform's ASIC
-        sonic_version_yml = open('/etc/sonic/sonic_version.yml', 'r')
-        asic_type = re.search(r"asic_type: (\S+)", sonic_version_yml.read()).group(1)
-        sonic_version_yml.close()
+        try:
+            version_info = device_info.get_sonic_version_info()
+            if version_info:
+                asic_type = version_info['asic_type']
+            else:
+                asic_type = None
+        except (KeyError, TypeError) as e:
+            click.echo("Caught an exception: " + str(e))
         # click.echo('Get running platform ASIC... %s' % asic_type)
 
         # Get installing image's ASIC

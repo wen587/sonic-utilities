@@ -480,10 +480,10 @@ def sonic_installer():
 @sonic_installer.command('install')
 @click.option('-y', '--yes', is_flag=True, callback=abort_if_false,
               expose_value=False, prompt='New image will be installed, continue?')
-@click.option('--force_secureboot', is_flag=True,
-              help="Force installation of an image of a type which is not secureboot")
-@click.option('-f', '--force_install', is_flag=True,
-              help="Force installation of an image of a type which differs from that of the current running image")
+@click.option('-f', '--force', '--skip-secure-check', is_flag=True,
+              help="Force installation of an image of a non-secure type than secure running image")
+@click.option('--skip-platform-check', is_flag=True,
+              help="Force installation of an image of a type which is not of the same platform")
 @click.option('--skip_migration', is_flag=True,
               help="Do not migrate current configuration to the newly installed image")
 @click.option('--skip-package-migration', is_flag=True,
@@ -502,7 +502,7 @@ def sonic_installer():
               cls=clicommon.MutuallyExclusiveOption, mutually_exclusive=['skip_setup_swap'],
               callback=validate_positive_int)
 @click.argument('url')
-def install(url, force_secureboot, force_install=False, skip_migration=False, skip_package_migration=False,
+def install(url, force, skip_platform_check=False, skip_migration=False, skip_package_migration=False,
             skip_setup_swap=False, swap_mem_size=None, total_mem_threshold=None, available_mem_threshold=None):
     """ Install image from local binary or URL"""
     bootloader = get_bootloader()
@@ -532,17 +532,17 @@ def install(url, force_secureboot, force_install=False, skip_migration=False, sk
             echo_and_log('Error: Failed to set image as default', LOG_ERR)
             raise click.Abort()
     else:
-        # Verify that the binary image is secureboot
-        if not bootloader.verify_secureboot_image(image_path) and not force_secureboot:
-            echo_and_log("Image file '{}' is not a secureboot image.\n".format(url) +
-                "If you are sure you want to install this image, use --force_secureboot.\n" +
+        # Verify not installing non-secure image in a secure running image
+        if not bootloader.verify_secureboot_image(image_path) and not force:
+            echo_and_log("Image file '{}' is of a non-secure type than secure running image.\n".format(url) +
+                "If you are sure you want to install this image, use -f|--force|--skip-secure-check.\n" +
                 "Aborting...", LOG_ERR)
             raise click.Abort()
 
-        # Verify that the binary image is of the same type as the running image
-        if not bootloader.verify_binary_image(image_path) and not force_install:
-            echo_and_log("Image file '{}' is of a different type than running image.\n".format(url) +
-                "If you are sure you want to install this image, use -f|--force_install.\n" +
+        # Verify that the binary image is of the same platform type than running platform
+        if not bootloader.verify_image_platform(image_path) and not skip_platform_check:
+            echo_and_log("Image file '{}' is of a different platform type than running platform.\n".format(url) +
+                "If you are sure you want to install this image, use --skip-platform-check.\n" +
                 "Aborting...", LOG_ERR)
             raise click.Abort()
 
