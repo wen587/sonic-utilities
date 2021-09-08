@@ -534,12 +534,12 @@ def install(url, force, skip_platform_check=False, skip_migration=False, skip_pa
     else:
         # Verify not installing non-secure image in a secure running image
         if not bootloader.verify_secureboot_image(image_path) and not force:
-            echo_and_log("Image file '{}' is of a non-secure type than secure running image.\n".format(url) +
+            echo_and_log("Image file '{}' is of a different type than running image.\n".format(url) +
                 "If you are sure you want to install this image, use -f|--force|--skip-secure-check.\n" +
                 "Aborting...", LOG_ERR)
             raise click.Abort()
 
-        # Verify that the binary image is of the same platform type than running platform
+        # Verify that the binary image is of the same platform type as running platform
         if not bootloader.verify_image_platform(image_path) and not skip_platform_check:
             echo_and_log("Image file '{}' is of a different platform type than running platform.\n".format(url) +
                 "If you are sure you want to install this image, use --skip-platform-check.\n" +
