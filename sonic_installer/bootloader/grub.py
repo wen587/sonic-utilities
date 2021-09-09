@@ -18,6 +18,8 @@ from ..common import (
 from .onie import OnieInstallerBootloader
 from .onie import default_sigpipe
 
+MACHINE_CONF = "installer/machine.conf"
+
 class GrubBootloader(OnieInstallerBootloader):
 
     NAME = 'grub'
@@ -99,9 +101,9 @@ class GrubBootloader(OnieInstallerBootloader):
         # click.echo('Get running platform ASIC... %s' % asic_type)
 
         # Get installing image's ASIC
-        p1 = subprocess.Popen(["cat", "-v", image_path], stdout=subprocess.PIPE, preexec_fn=default_sigpipe)
-        p2 = subprocess.Popen(["grep", "-m 1", "^image_asic"], stdin=p1.stdout, stdout=subprocess.PIPE, preexec_fn=default_sigpipe)
-        p3 = subprocess.Popen(["sed", "-n", r"s/^image_asic=\"\(.*\)\"$/\1/p"], stdin=p2.stdout, stdout=subprocess.PIPE, preexec_fn=default_sigpipe, text=True)
+        p1 = subprocess.Popen(["sed", "-e", "1,/^exit_marker$/d", image_path], stdout=subprocess.PIPE, preexec_fn=default_sigpipe)
+        p2 = subprocess.Popen(["tar", "xf", "-", MACHINE_CONF, "-O"], stdin=p1.stdout, stdout=subprocess.PIPE, preexec_fn=default_sigpipe)
+        p3 = subprocess.Popen(["sed", "-n", r"s/^machine=\(.*\)/\1/p"], stdin=p2.stdout, stdout=subprocess.PIPE, preexec_fn=default_sigpipe, text=True)
 
         stdout = p3.communicate()[0]
         p3.wait()
