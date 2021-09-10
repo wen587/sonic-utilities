@@ -98,7 +98,6 @@ class GrubBootloader(OnieInstallerBootloader):
                 asic_type = None
         except (KeyError, TypeError) as e:
             click.echo("Caught an exception: " + str(e))
-        # click.echo('Get running platform ASIC... %s' % asic_type)
 
         # Get installing image's ASIC
         p1 = subprocess.Popen(["sed", "-e", "1,/^exit_marker$/d", image_path], stdout=subprocess.PIPE, preexec_fn=default_sigpipe)
@@ -106,11 +105,9 @@ class GrubBootloader(OnieInstallerBootloader):
         p3 = subprocess.Popen(["sed", "-n", r"s/^machine=\(.*\)/\1/p"], stdin=p2.stdout, stdout=subprocess.PIPE, preexec_fn=default_sigpipe, text=True)
 
         stdout = p3.communicate()[0]
-        p3.wait()
         image_asic = stdout.rstrip('\n')
-        # click.echo('Get installing images ASIC... %s' % image_asic)
 
-        # Backword compatibility if IMAGE_ASIC not set in install.sh
+        # Return true if machine is not found
         if not image_asic:
             return True
 
