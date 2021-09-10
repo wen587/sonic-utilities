@@ -107,9 +107,9 @@ class GrubBootloader(OnieInstallerBootloader):
         stdout = p3.communicate()[0]
         image_asic = stdout.rstrip('\n')
 
-        # Return true if machine is not found
+        # Return false if machine is not found or unexpected issue occur
         if not image_asic:
-            return True
+            return False
 
         if asic_type == image_asic:
             return True
