@@ -18,7 +18,7 @@ from ..common import (
 from .onie import OnieInstallerBootloader
 from .onie import default_sigpipe
 
-DEVICES_DIR = "installer/devices"
+PLATFORMS_LIST = "installer/devices/platforms_asic"
 
 class GrubBootloader(OnieInstallerBootloader):
 
@@ -89,12 +89,12 @@ class GrubBootloader(OnieInstallerBootloader):
         """
         For those images that don't have devices list builtin, check_output will raise an exception.
         In this case, we simply return True to make it worked compatible as before.
-        Otherwise, we need to check if platform is inside the supported target devices list.
+        Otherwise, we need to check if platform is inside the supported target platforms list.
         """
         try:
             with open(os.devnull, 'w') as fnull:
                 p = subprocess.Popen(["sed", "-e", "1,/^exit_marker$/d", image_path], stdout=subprocess.PIPE, preexec_fn=default_sigpipe)
-                output = subprocess.check_output(["tar", "tf", "-", DEVICES_DIR], stdin=p.stdout, stderr=fnull, preexec_fn=default_sigpipe, text=True)
+                output = subprocess.check_output(["tar", "xf", "-", PLATFORMS_LIST, -O], stdin=p.stdout, stderr=fnull, preexec_fn=default_sigpipe, text=True)
                 return platform in output
         except subprocess.CalledProcessError:
             return True

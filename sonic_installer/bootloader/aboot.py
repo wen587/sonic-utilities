@@ -15,6 +15,7 @@ import click
 
 from M2Crypto import X509
 
+from sonic_py_common import device_info
 from ..common import (
    HOST_PATH,
    IMAGE_DIR_PREFIX,
@@ -164,7 +165,21 @@ class AbootBootloader(Bootloader):
         return IMAGE_PREFIX + version.strip()
 
     def verify_image_platform(self, image_path):
-        return os.path.isfile(image_path)
+        if not os.path.isfile(image_path):
+            return False
+
+        # Get running platform
+        platform = device_info.get_platform()
+
+        # If .platforms_asic is not existed, we simply return True for backward
+        # compatibility. Otherwise, we check if current platform is inside the
+        # supported target platforms list.
+        try:
+            output = subprocess.check_output(['/usr/bin/unzip', '-qop', image_path, '.platforms_asic'], text=True)
+        except subprocess.CalledProcessError:
+            return True
+
+        return platform in output
 
     def verify_secureboot_image(self, image_path):
         try:
