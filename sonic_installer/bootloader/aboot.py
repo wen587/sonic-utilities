@@ -176,10 +176,11 @@ class AbootBootloader(Bootloader):
         # supported target platforms list.
         try:
             output = subprocess.check_output(['/usr/bin/unzip', '-qop', image_path, '.platforms_asic'], text=True)
+            return platform in output
         except subprocess.CalledProcessError:
-            return True
+            pass
 
-        return platform in output
+        return True
 
     def verify_secureboot_image(self, image_path):
         try:

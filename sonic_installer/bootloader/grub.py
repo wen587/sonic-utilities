@@ -97,7 +97,9 @@ class GrubBootloader(OnieInstallerBootloader):
                 output = subprocess.check_output(["tar", "xf", "-", PLATFORMS_LIST, -O], stdin=p.stdout, stderr=fnull, preexec_fn=default_sigpipe, text=True)
                 return platform in output
         except subprocess.CalledProcessError:
-            return True
+            pass
+
+        return True
 
     def verify_image_platform(self, image_path):
         if not os.path.isfile(image_path):
