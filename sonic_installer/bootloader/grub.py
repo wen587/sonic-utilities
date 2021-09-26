@@ -18,7 +18,7 @@ from ..common import (
 from .onie import OnieInstallerBootloader
 from .onie import default_sigpipe
 
-PLATFORMS_LIST = "installer/devices/platforms_asic"
+PLATFORMS_ASIC = "installer/devices/platforms_asic"
 
 class GrubBootloader(OnieInstallerBootloader):
 
@@ -85,7 +85,7 @@ class GrubBootloader(OnieInstallerBootloader):
         run_command('grub-set-default --boot-directory=' + HOST_PATH + ' 0')
         click.echo('Image removed')
 
-    def platform_in_devices_list(self, platform, image_path):
+    def platform_in_platforms_asic(self, platform, image_path):
         """
         For those images that don't have devices list builtin, check_output will raise an exception.
         In this case, we simply return True to make it worked compatible as before.
@@ -94,7 +94,7 @@ class GrubBootloader(OnieInstallerBootloader):
         try:
             with open(os.devnull, 'w') as fnull:
                 p = subprocess.Popen(["sed", "-e", "1,/^exit_marker$/d", image_path], stdout=subprocess.PIPE, preexec_fn=default_sigpipe)
-                output = subprocess.check_output(["tar", "xf", "-", PLATFORMS_LIST, -O], stdin=p.stdout, stderr=fnull, preexec_fn=default_sigpipe, text=True)
+                output = subprocess.check_output(["tar", "xf", "-", PLATFORMS_ASIC, -O], stdin=p.stdout, stderr=fnull, preexec_fn=default_sigpipe, text=True)
                 return platform in output
         except subprocess.CalledProcessError:
             pass
@@ -109,7 +109,7 @@ class GrubBootloader(OnieInstallerBootloader):
         platform = device_info.get_platform()
 
         # Check if platform is inside image's target platforms
-        return self.platform_in_devices_list(platform, image_path)
+        return self.platform_in_platforms_asic(platform, image_path)
 
     @classmethod
     def detect(cls):
