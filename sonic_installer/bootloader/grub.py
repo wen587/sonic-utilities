@@ -14,9 +14,9 @@ from ..common import (
    IMAGE_DIR_PREFIX,
    IMAGE_PREFIX,
    run_command,
+   default_sigpipe,
 )
 from .onie import OnieInstallerBootloader
-from .onie import default_sigpipe
 
 PLATFORMS_ASIC = "installer/devices/platforms_asic"
 
@@ -87,19 +87,22 @@ class GrubBootloader(OnieInstallerBootloader):
 
     def platform_in_platforms_asic(self, platform, image_path):
         """
-        For those images that don't have devices list builtin, check_output will raise an exception.
+        For those images that don't have devices list builtin, 'tar' will have non-zero returncode.
         In this case, we simply return True to make it worked compatible as before.
-        Otherwise, we need to check if platform is inside the supported target platforms list.
+        Otherwise, we can grep to check if platform is inside the supported target platforms list.
         """
-        try:
-            with open(os.devnull, 'w') as fnull:
-                p = subprocess.Popen(["sed", "-e", "1,/^exit_marker$/d", image_path], stdout=subprocess.PIPE, preexec_fn=default_sigpipe)
-                output = subprocess.check_output(["tar", "xf", "-", PLATFORMS_ASIC, -O], stdin=p.stdout, stderr=fnull, preexec_fn=default_sigpipe, text=True)
-                return platform in output
-        except subprocess.CalledProcessError:
-            pass
+        with open(os.devnull, 'w') as fnull:
+            p1 = subprocess.Popen(["sed", "-e", "1,/^exit_marker$/d", image_path], stdout=subprocess.PIPE, preexec_fn=default_sigpipe)
+            p2 = subprocess.Popen(["tar", "xf", "-", PLATFORMS_ASIC, "-O"], stdin=p1.stdout, stdout=subprocess.PIPE, stderr=fnull, preexec_fn=default_sigpipe)
+            p3 = subprocess.Popen(["grep", "-Fxq", "-m 1", platform], stdin=p2.stdout, preexec_fn=default_sigpipe)
 
-        return True
+        p2.wait()
+        if p2.returncode != 0:
+            return True
+
+        # Code 0 is returned by grep as a result of found
+        p3.wait()
+        return p3.returncode ==0
 
     def verify_image_platform(self, image_path):
         if not os.path.isfile(image_path):

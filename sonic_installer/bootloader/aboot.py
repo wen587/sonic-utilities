@@ -23,12 +23,15 @@ from ..common import (
    ROOTFS_NAME,
    run_command,
    run_command_or_raise,
+   default_sigpipe,
 )
 from .bootloader import Bootloader
 
 _secureboot = None
 DEFAULT_SWI_IMAGE = 'sonic.swi'
 KERNEL_CMDLINE_NAME = 'kernel-cmdline'
+
+UNZIP_MISSING_FILE = 11
 
 # For the signature format, see: https://github.com/aristanetworks/swi-tools/tree/master/switools
 SWI_SIG_FILE_NAME = 'swi-signature'
@@ -171,16 +174,21 @@ class AbootBootloader(Bootloader):
         # Get running platform
         platform = device_info.get_platform()
 
-        # If .platforms_asic is not existed, we simply return True for backward
-        # compatibility. Otherwise, we check if current platform is inside the
+        # If .platforms_asic is not existed, unzip will return code 11.
+        # Return True for backward compatibility.
+        # Otherwise, we grep to see if current platform is inside the
         # supported target platforms list.
-        try:
-            output = subprocess.check_output(['/usr/bin/unzip', '-qop', image_path, '.platforms_asic'], text=True)
-            return platform in output
-        except subprocess.CalledProcessError:
-            pass
+        with open(os.devnull, 'w') as fnull:
+            p1 = subprocess.Popen(['/usr/bin/unzip', '-qop', image_path, '.platforms_asic'], stdout=subprocess.PIPE, stderr=fnull, preexec_fn=default_sigpipe)
+            p2 = subprocess.Popen(['grep', '-Fxq', '-m 1', platform], stdin=p1.stdout, preexec_fn=default_sigpipe)
 
-        return True
+        p1.wait()
+        if p1.returncode == UNZIP_MISSING_FILE:
+            return True
+
+        # Code 0 is returned by grep as a result of found
+        p2.wait()
+        return p2.returncode == 0
 
     def verify_secureboot_image(self, image_path):
         try:

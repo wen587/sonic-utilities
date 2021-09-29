@@ -541,7 +541,7 @@ def install(url, force, skip_platform_check=False, skip_migration=False, skip_pa
 
         # Verify that the binary image is of the same platform type as running platform
         if not skip_platform_check and not bootloader.verify_image_platform(image_path):
-            echo_and_log("Image file '{}' is of a different platform type than running platform.\n".format(url) +
+            echo_and_log("Image file '{}' is of a different platform ASIC type than running platform's.\n".format(url) +
                 "If you are sure you want to install this image, use --skip-platform-check.\n" +
                 "Aborting...", LOG_ERR)
             raise click.Abort()
