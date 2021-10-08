@@ -182,13 +182,13 @@ class AbootBootloader(Bootloader):
             p1 = subprocess.Popen(['/usr/bin/unzip', '-qop', image_path, '.platforms_asic'], stdout=subprocess.PIPE, stderr=fnull, preexec_fn=default_sigpipe)
             p2 = subprocess.Popen(['grep', '-Fxq', '-m 1', platform], stdin=p1.stdout, preexec_fn=default_sigpipe)
 
-        p1.wait()
-        if p1.returncode == UNZIP_MISSING_FILE:
-            return True
+            p1.wait()
+            if p1.returncode == UNZIP_MISSING_FILE:
+                return True
 
-        # Code 0 is returned by grep as a result of found
-        p2.wait()
-        return p2.returncode == 0
+            # Code 0 is returned by grep as a result of found
+            p2.wait()
+            return p2.returncode == 0
 
     def verify_secureboot_image(self, image_path):
         try:

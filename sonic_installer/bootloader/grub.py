@@ -96,13 +96,13 @@ class GrubBootloader(OnieInstallerBootloader):
             p2 = subprocess.Popen(["tar", "xf", "-", PLATFORMS_ASIC, "-O"], stdin=p1.stdout, stdout=subprocess.PIPE, stderr=fnull, preexec_fn=default_sigpipe)
             p3 = subprocess.Popen(["grep", "-Fxq", "-m 1", platform], stdin=p2.stdout, preexec_fn=default_sigpipe)
 
-        p2.wait()
-        if p2.returncode != 0:
-            return True
+            p2.wait()
+            if p2.returncode != 0:
+                return True
 
-        # Code 0 is returned by grep as a result of found
-        p3.wait()
-        return p3.returncode ==0
+            # Code 0 is returned by grep as a result of found
+            p3.wait()
+            return p3.returncode ==0
 
     def verify_image_platform(self, image_path):
         if not os.path.isfile(image_path):
