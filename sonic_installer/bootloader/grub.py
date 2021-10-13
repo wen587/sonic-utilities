@@ -18,7 +18,7 @@ from ..common import (
 )
 from .onie import OnieInstallerBootloader
 
-PLATFORMS_ASIC = "installer/devices/platforms_asic"
+PLATFORMS_ASIC = "installer/platforms_asic"
 
 class GrubBootloader(OnieInstallerBootloader):
 
