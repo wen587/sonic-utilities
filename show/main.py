@@ -1363,8 +1363,10 @@ def syslog(verbose):
         data = syslog_file.readlines()
     for line in data:
         if line.startswith("*.* @"):
-            line = line.split(":")
-            server = line[0][5:]
+            end = line.find("]")
+            if end == -1:
+                continue
+            server = line[5:end+1]
             syslog_servers.append(server)
     syslog_dict['Syslog Servers'] = syslog_servers
     print(tabulate(syslog_dict, headers=list(syslog_dict.keys()), tablefmt="simple", stralign='left', missingval=""))
