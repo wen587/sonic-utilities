@@ -1372,7 +1372,7 @@ def syslog(verbose):
     for line in data:
         if re_ipv4_1.match(line):
             server =  re_ipv4_1.match(line).group(1)
-        if re_ipv4_2.match(line):
+        elif re_ipv4_2.match(line):
             server =  re_ipv4_2.match(line).group(1)
         elif re_ipv6.match(line):
             server =  re_ipv6.match(line).group(1)
