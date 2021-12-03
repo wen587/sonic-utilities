@@ -1369,7 +1369,7 @@ def syslog(verbose):
     syslog_dict = {}
     re_ipv4_1 = re.compile(r'^\*\.\* @{1,2}(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})(:\d+)?')
     re_ipv4_2 = re.compile(r'^\*\.\* @{1,2}\[(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})\](:\d+)?')
-    re_ipv6 = re.compile(r'^\*\.\* @{1,2}\[([0-9a-fA-F:]+)\](:\d+)?')
+    re_ipv6 = re.compile(r'^\*\.\* @{1,2}\[([0-9a-fA-F:.]+)\](:\d+)?')
     with open("/etc/rsyslog.conf") as syslog_file:
         data = syslog_file.readlines()
     for line in data:
