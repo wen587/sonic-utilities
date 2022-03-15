@@ -6,7 +6,7 @@ import unittest
 from collections import defaultdict
 from unittest.mock import patch
 
-from generic_config_updater.services_validator import vlan_validator, rsyslog_validator
+from generic_config_updater.services_validator import vlan_validator, rsyslog_validator, caclrule_validator
 import generic_config_updater.gu_common
 
 
@@ -60,6 +60,54 @@ test_data = [
         }
     ]
 
+test_caclrule = [
+        { "old": {}, "upd": {}, "cmd": "" },
+        {
+            "old": { "ACL_RULE": {
+                "XXX": { "SRC_IP": "10.10.10.10/16",
+                         "PRIORITY": "9999",
+                         "PACKET_ACTION": "ACCEPT"} } },
+            "upd": { "ACL_RULE": {
+                "XXX": { "SRC_IP": "10.10.10.10/16",
+                         "PRIORITY": "9999",
+                         "PACKET_ACTION": "ACCEPT"} } },
+            "cmd": ""
+        },
+        {
+            "old": { "ACL_RULE": {
+                "XXX": { "SRC_IP": "10.10.10.10/16",
+                         "PRIORITY": "9999",
+                         "PACKET_ACTION": "ACCEPT"} } },
+            "upd": { "ACL_RULE": {
+                "XXX": { "SRC_IP": "11.11.11.11/16",
+                         "PRIORITY": "9999",
+                         "PACKET_ACTION": "ACCEPT"} } },
+            "cmd": "sleep 1s"
+        },
+        {
+            "old": { "ACL_RULE": {
+                "XXX": { "SRC_IP": "10.10.10.10/16",
+                         "PRIORITY": "9999",
+                         "PACKET_ACTION": "ACCEPT"} } },
+            "upd": { "ACL_RULE": {
+                "XXX": { "SRC_IP": "10.10.10.10/16",
+                         "PRIORITY": "9999",
+                         "PACKET_ACTION": "ACCEPT" },
+                "YYY": { "SRC_IP": "12.12.12.12/16",
+                         "PRIORITY": "9998",
+                         "PACKET_ACTION": "ACCEPT"} } },
+            "cmd": "sleep 1s"
+        },
+        {
+            "old": { "ACL_RULE": {
+                "XXX": { "SRC_IP": "10.10.10.10/16",
+                         "PRIORITY": "9999",
+                         "PACKET_ACTION": "ACCEPT"} } },
+            "upd": {},
+            "cmd": "sleep 1s"
+        },
+    ]
+
 test_rsyslog_fail = [
         # Fail the calls, to get the entire fail path calls invoked
         #
@@ -80,13 +128,20 @@ class TestServiceValidator(unittest.TestCase):
 
         mock_os_sys.side_effect = mock_os_system_call
 
-        i = 0
         for entry in test_data:
             if entry["cmd"]:
                 os_system_calls.append({"cmd": entry["cmd"], "rc": 0 })
             msg = "case failed: {}".format(str(entry))
 
             vlan_validator(entry["old"], entry["upd"], None)
+
+
+        for entry in test_caclrule:
+            if entry["cmd"]:
+                os_system_calls.append({"cmd": entry["cmd"], "rc": 0 })
+            msg = "case failed: {}".format(str(entry))
+
+            caclrule_validator(entry["old"], entry["upd"], None)
 
 
         # Test failure case

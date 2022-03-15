@@ -71,3 +71,16 @@ def vlan_validator(old_config, upd_config, keys):
     # No update to DHCP servers.
     return True
 
+def caclrule_validator(old_config, upd_config, keys):
+    old_caclrule = old_config.get("ACL_RULE", {})
+    upd_caclrule = upd_config.get("ACL_RULE", {})
+
+    for key in set(old_caclrule.keys()).union(set(upd_caclrule.keys())):
+        if (old_caclrule.get(key, {}) != upd_caclrule.get(key, {})):
+            # caclmgrd will update in 0.5 sec when configuration stops,
+            # we sleep 1 sec to make sure it does update.
+            rc = os.system("sleep 1s")
+            return rc == 0
+    # No update to ACL_RULE.
+    return True
+
