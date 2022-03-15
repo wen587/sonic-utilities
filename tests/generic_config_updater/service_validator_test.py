@@ -63,46 +63,69 @@ test_data = [
 test_caclrule = [
         { "old": {}, "upd": {}, "cmd": "" },
         {
-            "old": { "ACL_RULE": {
-                "XXX": { "SRC_IP": "10.10.10.10/16",
-                         "PRIORITY": "9999",
-                         "PACKET_ACTION": "ACCEPT"} } },
-            "upd": { "ACL_RULE": {
-                "XXX": { "SRC_IP": "10.10.10.10/16",
-                         "PRIORITY": "9999",
-                         "PACKET_ACTION": "ACCEPT"} } },
+            "old": {
+                "ACL_TABLE": { "XXX": { "type": "CTRLPLANE" } },
+                "ACL_RULE": { "XXX|RULE_1": { "SRC_IP": "10.10.10.10/16" } }
+            },
+            "upd": {
+                "ACL_TABLE": { "XXX": { "type": "CTRLPLANE" } },
+                "ACL_RULE": { "XXX|RULE_1": { "SRC_IP": "10.10.10.10/16" } }
+            },
             "cmd": ""
         },
         {
-            "old": { "ACL_RULE": {
-                "XXX": { "SRC_IP": "10.10.10.10/16",
-                         "PRIORITY": "9999",
-                         "PACKET_ACTION": "ACCEPT"} } },
-            "upd": { "ACL_RULE": {
-                "XXX": { "SRC_IP": "11.11.11.11/16",
-                         "PRIORITY": "9999",
-                         "PACKET_ACTION": "ACCEPT"} } },
+            "old": {
+                "ACL_TABLE": {
+                    "XXX": { "type": "CTRLPLANE" },
+                    "YYY": { "type": "L3" }
+                },
+                "ACL_RULE": {
+                    "XXX|RULE_1": { "SRC_IP": "10.10.10.10/16" },
+                    "YYY|RULE_1": { "SRC_IP": "192.168.1.10/32" }
+                }
+            },
+            "upd": {
+                "ACL_TABLE": {
+                    "XXX": { "type": "CTRLPLANE" }
+                },
+                "ACL_RULE": {
+                    "XXX|RULE_1": { "SRC_IP": "10.10.10.10/16" }
+                }
+            },
+            "cmd": ""
+        },
+        {
+            "old": {
+                "ACL_TABLE": { "XXX": { "type": "CTRLPLANE" } },
+                "ACL_RULE": { "XXX|RULE_1": { "SRC_IP": "10.10.10.10/16" } }
+            },
+            "upd": {
+                "ACL_TABLE": { "XXX": { "type": "CTRLPLANE" } },
+                "ACL_RULE": { "XXX|RULE_1": { "SRC_IP": "11.11.11.11/16" } }
+            },
             "cmd": "sleep 1s"
         },
         {
-            "old": { "ACL_RULE": {
-                "XXX": { "SRC_IP": "10.10.10.10/16",
-                         "PRIORITY": "9999",
-                         "PACKET_ACTION": "ACCEPT"} } },
-            "upd": { "ACL_RULE": {
-                "XXX": { "SRC_IP": "10.10.10.10/16",
-                         "PRIORITY": "9999",
-                         "PACKET_ACTION": "ACCEPT" },
-                "YYY": { "SRC_IP": "12.12.12.12/16",
-                         "PRIORITY": "9998",
-                         "PACKET_ACTION": "ACCEPT"} } },
+            "old": {
+                "ACL_TABLE": { "XXX": { "type": "CTRLPLANE" } },
+                "ACL_RULE": {
+                    "XXX|RULE_1": { "SRC_IP": "10.10.10.10/16" }
+                }
+            },
+            "upd": {
+                "ACL_TABLE": { "XXX": { "type": "CTRLPLANE" } },
+                "ACL_RULE": {
+                    "XXX|RULE_1": { "SRC_IP": "10.10.10.10/16" },
+                    "XXX|RULE_2": { "SRC_IP": "12.12.12.12/16" }
+                }
+            },
             "cmd": "sleep 1s"
         },
         {
-            "old": { "ACL_RULE": {
-                "XXX": { "SRC_IP": "10.10.10.10/16",
-                         "PRIORITY": "9999",
-                         "PACKET_ACTION": "ACCEPT"} } },
+            "old": {
+                "ACL_TABLE": { "XXX": { "type": "CTRLPLANE" } },
+                "ACL_RULE": { "XXX|RULE_1": { "SRC_IP": "10.10.10.10/16" } }
+            },
             "upd": {},
             "cmd": "sleep 1s"
         },

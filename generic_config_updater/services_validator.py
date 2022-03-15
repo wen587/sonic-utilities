@@ -72,11 +72,30 @@ def vlan_validator(old_config, upd_config, keys):
     return True
 
 def caclrule_validator(old_config, upd_config, keys):
-    old_caclrule = old_config.get("ACL_RULE", {})
-    upd_caclrule = upd_config.get("ACL_RULE", {})
+    old_acltable = old_config.get("ACL_TABLE", {})
+    upd_acltable = upd_config.get("ACL_TABLE", {})
 
-    for key in set(old_caclrule.keys()).union(set(upd_caclrule.keys())):
-        if (old_caclrule.get(key, {}) != upd_caclrule.get(key, {})):
+    try:
+        old_cacltable = [table for table in old_acltable
+                         if old_acltable.get(table)["type"] == "CTRLPLANE"]
+        upd_cacltable = [table for table in upd_acltable
+                         if upd_acltable.get(table)["type"] == "CTRLPLANE"]
+    except KeyError:
+        logger.log(logger.LOG_PRIORITY_ERROR,
+                "Field 'type' is required in ACL_TABLE",
+                print_to_console)
+        return False
+
+    old_aclrule = old_config.get("ACL_RULE", {})
+    upd_aclrule = upd_config.get("ACL_RULE", {})
+
+    old_caclrule = [rule for rule in old_aclrule
+                    if rule.split("|")[0] in old_cacltable]
+    upd_caclrule = [rule for rule in upd_aclrule
+                    if rule.split("|")[0] in upd_cacltable]
+
+    for key in set(old_caclrule).union(set(upd_caclrule)):
+        if (old_aclrule.get(key, {}) != upd_aclrule.get(key, {})):
             # caclmgrd will update in 0.5 sec when configuration stops,
             # we sleep 1 sec to make sure it does update.
             rc = os.system("sleep 1s")
