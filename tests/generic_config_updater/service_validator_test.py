@@ -6,7 +6,7 @@ import unittest
 from collections import defaultdict
 from unittest.mock import patch
 
-from generic_config_updater.services_validator import vlan_validator, rsyslog_validator, caclrule_validator
+from generic_config_updater.services_validator import vlan_validator, rsyslog_validator, caclmgrd_validator
 import generic_config_updater.gu_common
 
 
@@ -164,7 +164,7 @@ class TestServiceValidator(unittest.TestCase):
                 os_system_calls.append({"cmd": entry["cmd"], "rc": 0 })
             msg = "case failed: {}".format(str(entry))
 
-            caclrule_validator(entry["old"], entry["upd"], None)
+            caclmgrd_validator(entry["old"], entry["upd"], None)
 
 
         # Test failure case

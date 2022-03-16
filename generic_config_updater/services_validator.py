@@ -71,20 +71,14 @@ def vlan_validator(old_config, upd_config, keys):
     # No update to DHCP servers.
     return True
 
-def caclrule_validator(old_config, upd_config, keys):
+def caclmgrd_validator(old_config, upd_config, keys):
     old_acltable = old_config.get("ACL_TABLE", {})
     upd_acltable = upd_config.get("ACL_TABLE", {})
 
-    try:
-        old_cacltable = [table for table in old_acltable
-                         if old_acltable.get(table)["type"] == "CTRLPLANE"]
-        upd_cacltable = [table for table in upd_acltable
-                         if upd_acltable.get(table)["type"] == "CTRLPLANE"]
-    except KeyError:
-        logger.log(logger.LOG_PRIORITY_ERROR,
-                "Field 'type' is required in ACL_TABLE",
-                print_to_console)
-        return False
+    old_cacltable = [table for table, fields in old_acltable.items()
+                     if fields.get("type", "") == "CTRLPLANE"]
+    upd_cacltable = [table for table, fields in upd_acltable.items()
+                     if fields.get("type", "") == "CTRLPLANE"]
 
     old_aclrule = old_config.get("ACL_RULE", {})
     upd_aclrule = upd_config.get("ACL_RULE", {})
@@ -94,6 +88,7 @@ def caclrule_validator(old_config, upd_config, keys):
     upd_caclrule = [rule for rule in upd_aclrule
                     if rule.split("|")[0] in upd_cacltable]
 
+    # Only sleep when cacl rule is changed as this will update iptable.
     for key in set(old_caclrule).union(set(upd_caclrule)):
         if (old_aclrule.get(key, {}) != upd_aclrule.get(key, {})):
             # caclmgrd will update in 0.5 sec when configuration stops,

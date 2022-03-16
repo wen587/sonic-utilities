@@ -44,7 +44,7 @@
             "services_to_validate": [ "vlan-service" ]
         },
         "ACL_RULE": {
-            "services_to_validate": [ "caclrule-service" ]
+            "services_to_validate": [ "caclmgrd-service" ]
         }
     },
     "services": {
@@ -63,8 +63,8 @@
         "vlan-service": {
             "validate_commands": [ "generic_config_updater.services_validator.vlan_validator" ]
         },
-        "caclrule-service": {
-            "validate_commands": [ "generic_config_updater.services_validator.caclrule_validator" ]
+        "caclmgrd-service": {
+            "validate_commands": [ "generic_config_updater.services_validator.caclmgrd_validator" ]
         }
     }
 }
