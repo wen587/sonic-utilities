@@ -93,8 +93,8 @@ def caclmgrd_validator(old_config, upd_config, keys):
         if (old_aclrule.get(key, {}) != upd_aclrule.get(key, {})):
             # caclmgrd will update in 0.5 sec when configuration stops,
             # we sleep 1 sec to make sure it does update.
-            rc = os.system("sleep 1s")
-            return rc == 0
+            time.sleep(1)
+            return True
     # No update to ACL_RULE.
     return True
 
