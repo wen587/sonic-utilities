@@ -15,7 +15,7 @@ import itertools
 
 from collections import OrderedDict
 from generic_config_updater.generic_updater import GenericUpdater, ConfigFormat
-from minigraph import parse_device_desc_xml
+from minigraph import parse_device_desc_xml, minigraph_encoder
 from natsort import natsorted
 from portconfig import get_child_ports
 from socket import AF_INET, AF_INET6
@@ -27,7 +27,7 @@ from utilities_common.db import Db
 from utilities_common.intf_filter import parse_interface_in_filter
 from utilities_common import bgp_util
 import utilities_common.cli as clicommon
-from utilities_common.general import load_db_config
+from utilities_common.general import load_db_config, load_module_from_source
 
 from .utils import log
 
@@ -98,6 +98,9 @@ DSCP_RANGE = click.IntRange(min=0, max=63)
 TTL_RANGE = click.IntRange(min=0, max=255)
 QUEUE_RANGE = click.IntRange(min=0, max=255)
 GRE_TYPE_RANGE = click.IntRange(min=0, max=65535)
+
+# Load sonic-cfggen from source since /usr/local/bin/sonic-cfggen does not have .py extension.
+sonic_cfggen = load_module_from_source('sonic_cfggen', '/usr/local/bin/sonic-cfggen')
 
 #
 # Helper functions
@@ -1619,6 +1622,9 @@ def load_minigraph(db, no_service_restart):
                 cfggen_namespace_option = " -n {}".format(namespace)
             clicommon.run_command(db_migrator + ' -o set_version' + cfggen_namespace_option)
 
+    # Load golden_config_db.json
+    load_golden_config('/etc/sonic/golden_config_db.json')
+
     # We first run "systemctl reset-failed" to remove the "failed"
     # status from all services before we attempt to restart them
     if not no_service_restart:
@@ -1666,6 +1672,65 @@ def load_port_config(config_db, port_config_path):
                 'startup' if port_config[port_name]['admin_status'] == 'up' else 'shutdown',
                 port_name), display_cmd=True)
     return
+
+
+def load_golden_config(golden_config_path):
+    if not os.path.isfile(golden_config_path):
+        return
+
+    # Override configDB with golden config
+    clicommon.run_command('config override-config-table {}'.format(
+        golden_config_path), display_cmd=True)
+    return
+
+
+#
+# 'override-config-table' command ('config override-config-table ...')
+#
+@config.command('override-config-table')
+@click.argument('golden-config-db', required=True)
+@click.option(
+    '--dry_run', type=click.STRING,
+    help="Dry run, writes config to the given file"
+)
+@clicommon.pass_db
+def override_config_table(db, golden_config_db, dry_run):
+    """Override current configDB with golden config."""
+
+    try:
+        # Load golden config json
+        golden_config_input = read_json_file(golden_config_db)
+    except Exception:
+        click.secho("Bad format: json file broken", fg='magenta')
+        sys.exit(1)
+
+    # Validate if the input is dict
+    if not isinstance(golden_config_input, dict):
+        click.secho("Bad format: golden_config_db is not a dict", fg='magenta')
+        sys.exit(1)
+
+    config_db = db.cfgdb
+
+    if dry_run:
+        # Read config from configDB
+        current_config = config_db.get_config()
+        # Serialize to the same format as json input
+        sonic_cfggen.FormatConverter.to_serialized(current_config)
+        # Override current config with golden config
+        for table in golden_config_input:
+            current_config[table] = golden_config_input[table]
+        with open(dry_run, "w+") as f:
+            json.dump(current_config, f, sort_keys=True, indent=4, cls=minigraph_encoder)
+    else:
+        # Deserialized golden config to DB recognized format
+        sonic_cfggen.FormatConverter.to_deserialized(golden_config_input)
+        # Delete table from DB then mod_config to apply golden config
+        click.echo("Removing configDB overriden table first ...")
+        for table in golden_config_input:
+            config_db.delete_table(table)
+        click.echo("Writing golden config to configDB ...")
+        data = sonic_cfggen.FormatConverter.output_to_db(golden_config_input)
+        config_db.mod_config(data)
 
 #
 # 'hostname' command
