@@ -1678,10 +1678,8 @@ def load_port_config(config_db, port_config_path):
 
 def override_config_by(golden_config_path):
     # Override configDB with golden config
-    cmd = "config override-config-table {}".format(golden_config_path)
-    click.echo(click.style("Running command: ", fg='cyan') +
-               click.style(cmd, fg='green'))
-    os.system(cmd)
+    clicommon.run_command('config override-config-table {}'.format(
+        golden_config_path), display_cmd=True)
     return
 
 
