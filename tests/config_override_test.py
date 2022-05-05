@@ -15,8 +15,6 @@ EMPTY_INPUT = os.path.join(DATA_DIR, "empty_input.json")
 PARTIAL_CONFIG_OVERRIDE = os.path.join(DATA_DIR, "partial_config_override.json")
 NEW_FEATURE_CONFIG = os.path.join(DATA_DIR, "new_feature_config.json")
 FULL_CONFIG_OVERRIDE = os.path.join(DATA_DIR, "full_config_override.json")
-DRY_RUN_INPUT = os.path.join(os.sep, "tmp", "override_config_input.json")
-DRY_RUN_OUTPUT = os.path.join(os.sep, "tmp", "override_config_output.json")
 
 # Load sonic-cfggen from source since /usr/local/bin/sonic-cfggen does not have .py extension.
 sonic_cfggen = load_module_from_source('sonic_cfggen', '/usr/local/bin/sonic-cfggen')
@@ -78,22 +76,21 @@ class TestConfigOverride(object):
                                    ['golden_config_db.json'], obj=db)
 
             assert result.exit_code == 1
-            assert "Bad format: golden_config_db is not a dict" in result.output
+            assert "Bad format: input_config_db is not a dict" in result.output
 
     def test_dry_run(self):
         def read_json_file_side_effect(filename):
             return {}
         db = Db()
         current_config = read_config_db(db.cfgdb)
-        write_config_to_file(current_config, DRY_RUN_INPUT)
         with mock.patch('config.main.read_json_file',
                         mock.MagicMock(side_effect=read_json_file_side_effect)):
             runner = CliRunner()
             result = runner.invoke(config.config.commands["override-config-table"],
-                                   ['golden_config_db.json', '--dry_run', DRY_RUN_OUTPUT])
+                                   ['golden_config_db.json', '--dry-run'])
 
             assert result.exit_code == 0
-            assert filecmp.cmp(DRY_RUN_INPUT, DRY_RUN_OUTPUT, shallow=False)
+            assert json.loads(result.output) == current_config
 
     def test_golden_config_db_empty(self):
         db = Db()
@@ -150,8 +147,4 @@ class TestConfigOverride(object):
     def teardown_class(cls):
         print("TEARDOWN")
         os.environ["UTILITIES_UNIT_TESTING"] = "0"
-        if os.path.isfile(DRY_RUN_INPUT):
-            os.remove(DRY_RUN_INPUT)
-        if os.path.isfile(DRY_RUN_OUTPUT):
-            os.remove(DRY_RUN_OUTPUT)
         return

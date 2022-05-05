@@ -71,6 +71,7 @@ DEFAULT_CONFIG_DB_FILE = '/etc/sonic/config_db.json'
 DEFAULT_CONFIG_YANG_FILE = '/etc/sonic/config_yang.json'
 NAMESPACE_PREFIX = 'asic'
 INTF_KEY = "interfaces"
+DEFAULT_GOLDEN_CONFIG_DB_FILE = '/etc/sonic/golden_config_db.json'
 
 INIT_CFG_FILE = '/etc/sonic/init_cfg.json'
 
@@ -1623,7 +1624,8 @@ def load_minigraph(db, no_service_restart):
             clicommon.run_command(db_migrator + ' -o set_version' + cfggen_namespace_option)
 
     # Load golden_config_db.json
-    load_golden_config('/etc/sonic/golden_config_db.json')
+    if os.path.isfile(DEFAULT_GOLDEN_CONFIG_DB_FILE):
+        override_config_by(DEFAULT_GOLDEN_CONFIG_DB_FILE)
 
     # We first run "systemctl reset-failed" to remove the "failed"
     # status from all services before we attempt to restart them
@@ -1674,13 +1676,12 @@ def load_port_config(config_db, port_config_path):
     return
 
 
-def load_golden_config(golden_config_path):
-    if not os.path.isfile(golden_config_path):
-        return
-
+def override_config_by(golden_config_path):
     # Override configDB with golden config
-    clicommon.run_command('config override-config-table {}'.format(
-        golden_config_path), display_cmd=True)
+    cmd = "config override-config-table {}".format(golden_config_path)
+    click.echo(click.style("Running command: ", fg='cyan') +
+               click.style(cmd, fg='green'))
+    os.system(cmd)
     return
 
 
@@ -1688,25 +1689,27 @@ def load_golden_config(golden_config_path):
 # 'override-config-table' command ('config override-config-table ...')
 #
 @config.command('override-config-table')
-@click.argument('golden-config-db', required=True)
+@click.argument('input-config-db', required=True)
 @click.option(
-    '--dry_run', type=click.STRING,
-    help="Dry run, writes config to the given file"
+    '--dry-run', is_flag=True, default=False,
+    help='test out the command without affecting config state'
 )
 @clicommon.pass_db
-def override_config_table(db, golden_config_db, dry_run):
-    """Override current configDB with golden config."""
+def override_config_table(db, input_config_db, dry_run):
+    """Override current configDB with input config."""
 
     try:
         # Load golden config json
-        golden_config_input = read_json_file(golden_config_db)
-    except Exception:
-        click.secho("Bad format: json file broken", fg='magenta')
+        config_input = read_json_file(input_config_db)
+    except Exception as e:
+        click.secho("Bad format: json file broken. {}".format(str(e)),
+                    fg='magenta')
         sys.exit(1)
 
     # Validate if the input is dict
-    if not isinstance(golden_config_input, dict):
-        click.secho("Bad format: golden_config_db is not a dict", fg='magenta')
+    if not isinstance(config_input, dict):
+        click.secho("Bad format: input_config_db is not a dict",
+                    fg='magenta')
         sys.exit(1)
 
     config_db = db.cfgdb
@@ -1717,20 +1720,21 @@ def override_config_table(db, golden_config_db, dry_run):
         # Serialize to the same format as json input
         sonic_cfggen.FormatConverter.to_serialized(current_config)
         # Override current config with golden config
-        for table in golden_config_input:
-            current_config[table] = golden_config_input[table]
-        with open(dry_run, "w+") as f:
-            json.dump(current_config, f, sort_keys=True, indent=4, cls=minigraph_encoder)
+        for table in config_input:
+            current_config[table] = config_input[table]
+        print(json.dumps(current_config, sort_keys=True,
+                         indent=4, cls=minigraph_encoder))
     else:
         # Deserialized golden config to DB recognized format
-        sonic_cfggen.FormatConverter.to_deserialized(golden_config_input)
+        sonic_cfggen.FormatConverter.to_deserialized(config_input)
         # Delete table from DB then mod_config to apply golden config
         click.echo("Removing configDB overriden table first ...")
-        for table in golden_config_input:
+        for table in config_input:
             config_db.delete_table(table)
-        click.echo("Writing golden config to configDB ...")
-        data = sonic_cfggen.FormatConverter.output_to_db(golden_config_input)
+        click.echo("Overriding input config to configDB ...")
+        data = sonic_cfggen.FormatConverter.output_to_db(config_input)
         config_db.mod_config(data)
+        click.echo("Overriding completed. No service is restarted.")
 
 #
 # 'hostname' command
