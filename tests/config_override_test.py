@@ -6,7 +6,6 @@ import config.main as config
 from click.testing import CliRunner
 from unittest import mock
 from utilities_common.db import Db
-from utilities_common.general import load_module_from_source
 from minigraph import minigraph_encoder
 
 SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -16,8 +15,10 @@ PARTIAL_CONFIG_OVERRIDE = os.path.join(DATA_DIR, "partial_config_override.json")
 NEW_FEATURE_CONFIG = os.path.join(DATA_DIR, "new_feature_config.json")
 FULL_CONFIG_OVERRIDE = os.path.join(DATA_DIR, "full_config_override.json")
 
-# Load sonic-cfggen from source since /usr/local/bin/sonic-cfggen does not have .py extension.
-sonic_cfggen = load_module_from_source('sonic_cfggen', '/usr/local/bin/sonic-cfggen')
+# Using load_source to 'import /usr/local/bin/sonic-cfggen as sonic_cfggen'
+# since /usr/local/bin/sonic-cfggen does not have .py extension.
+from imp import load_source
+load_source('sonic_cfggen', '/usr/local/bin/sonic-cfggen')
 
 
 def write_init_config_db(cfgdb, config):
