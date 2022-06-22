@@ -42,6 +42,7 @@ from .config_mgmt import ConfigMgmtDPB
 
 # Using load_source to 'import /usr/local/bin/sonic-cfggen as sonic_cfggen'
 # since /usr/local/bin/sonic-cfggen does not have .py extension.
+from imp import load_source
 load_source('sonic_cfggen', '/usr/local/bin/sonic-cfggen')
 
 # mock masic APIs for unit test
