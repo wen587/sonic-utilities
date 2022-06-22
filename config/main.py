@@ -24,8 +24,6 @@ from swsscommon.swsscommon import SonicV2Connector
 from utilities_common.db import Db
 from utilities_common.intf_filter import parse_interface_in_filter
 import utilities_common.cli as clicommon
-from utilities_common.general import load_module_from_source
-
 from .utils import log
 
 from . import aaa
@@ -40,6 +38,12 @@ from . import nat
 from . import vlan
 from . import vxlan
 from .config_mgmt import ConfigMgmtDPB
+
+# Using load_source to 'import /usr/local/bin/sonic-cfggen as sonic_cfggen'
+# since /usr/local/bin/sonic-cfggen does not have .py extension.
+from imp import load_source
+load_source('sonic_cfggen', '/usr/local/bin/sonic-cfggen')
+import sonic_cfggen
 
 # mock masic APIs for unit test
 try:
@@ -91,9 +95,6 @@ DSCP_RANGE = click.IntRange(min=0, max=63)
 TTL_RANGE = click.IntRange(min=0, max=255)
 QUEUE_RANGE = click.IntRange(min=0, max=255)
 GRE_TYPE_RANGE = click.IntRange(min=0, max=65535)
-
-# Load sonic-cfggen from source since /usr/local/bin/sonic-cfggen does not have .py extension.
-sonic_cfggen = load_module_from_source('sonic_cfggen', '/usr/local/bin/sonic-cfggen')
 
 #
 # Helper functions
