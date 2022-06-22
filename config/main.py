@@ -38,7 +38,11 @@ from . import muxcable
 from . import nat
 from . import vlan
 from . import vxlan
-from .config_mgmt import ConfigMgmtDPB, sonic_cfggen
+from .config_mgmt import ConfigMgmtDPB
+
+# Using load_source to 'import /usr/local/bin/sonic-cfggen as sonic_cfggen'
+# since /usr/local/bin/sonic-cfggen does not have .py extension.
+load_source('sonic_cfggen', '/usr/local/bin/sonic-cfggen')
 
 # mock masic APIs for unit test
 try:
