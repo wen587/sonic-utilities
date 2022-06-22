@@ -19,6 +19,7 @@ FULL_CONFIG_OVERRIDE = os.path.join(DATA_DIR, "full_config_override.json")
 # since /usr/local/bin/sonic-cfggen does not have .py extension.
 from imp import load_source
 load_source('sonic_cfggen', '/usr/local/bin/sonic-cfggen')
+import sonic_cfggen
 
 
 def write_init_config_db(cfgdb, config):

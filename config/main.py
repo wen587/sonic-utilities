@@ -44,6 +44,7 @@ from .config_mgmt import ConfigMgmtDPB
 # since /usr/local/bin/sonic-cfggen does not have .py extension.
 from imp import load_source
 load_source('sonic_cfggen', '/usr/local/bin/sonic-cfggen')
+import sonic_cfggen
 
 # mock masic APIs for unit test
 try:
