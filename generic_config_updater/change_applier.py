@@ -147,8 +147,8 @@ class ChangeApplier:
         ret = self._services_validate(run_data, upd_data, upd_keys)
         if not ret:
             run_data = self._get_running_config()
-            upd_data = self.get_config_without_backend_tables(upd_data)
-            run_data = self.get_config_without_backend_tables(run_data)
+            self.remove_backend_tables_from_config(upd_data)
+            self.remove_backend_tables_from_config(run_data)
             if upd_data != run_data:
                 self._report_mismatch(run_data, upd_data)
                 ret = -1
@@ -157,11 +157,9 @@ class ChangeApplier:
         return ret
 
 
-    def get_config_without_backend_tables(self, data):
-        cropped_data = {
-            k: v for k, v in data.items() if k not in self.backend_tables
-        }
-        return cropped_data
+    def remove_backend_tables_from_config(self, data):
+        for key in self.backend_tables:
+            data.pop(key, None)
 
 
     def _get_running_config(self):

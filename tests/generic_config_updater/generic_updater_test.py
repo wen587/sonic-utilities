@@ -73,8 +73,6 @@ class TestPatchApplier(unittest.TestCase):
 
         changeapplier = Mock()
         changeapplier.apply.side_effect = create_side_effect_dict({(str(changes[0]),): 0, (str(changes[1]),): 0})
-        changeapplier.get_config_without_backend_tables.side_effect = \
-            [Files.CONFIG_DB_AFTER_MULTI_PATCH, Files.CONFIG_DB_AFTER_MULTI_PATCH]
 
         return gu.PatchApplier(patchsorter, changeapplier, config_wrapper, patch_wrapper)
 
