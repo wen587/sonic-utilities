@@ -12,6 +12,7 @@ import subprocess
 import sys
 import time
 import itertools
+import sonic_yang
 
 from collections import OrderedDict
 from generic_config_updater.generic_updater import GenericUpdater, ConfigFormat
@@ -77,6 +78,7 @@ INTF_KEY = "interfaces"
 DEFAULT_GOLDEN_CONFIG_DB_FILE = '/etc/sonic/golden_config_db.json'
 
 INIT_CFG_FILE = '/etc/sonic/init_cfg.json'
+YANG_DIR = '/usr/local/yang-models'
 
 DEFAULT_NAMESPACE = ''
 CFG_LOOPBACK_PREFIX = "Loopback"
@@ -1852,27 +1854,70 @@ def override_config_table(db, input_config_db, dry_run):
 
     config_db = db.cfgdb
 
+    # Read config from configDB
+    current_config = config_db.get_config()
+    # Serialize to the same format as json input
+    sonic_cfggen.FormatConverter.to_serialized(current_config)
+
+    updated_config = update_config(current_config, config_input)
+
+    yang_enabled = is_yang_config_verification_enabled(config_db)
+    if yang_enabled:
+        sy = sonic_yang_with_loaded_models(YANG_DIR)
+        # Validate running config
+        validate_config_by_yang(sy, current_config)
+        # Validate input config
+        validate_config_by_yang(sy, config_input)
+        # Validate updated whole config
+        validate_config_by_yang(sy, updated_config)
+
     if dry_run:
-        # Read config from configDB
-        current_config = config_db.get_config()
-        # Serialize to the same format as json input
-        sonic_cfggen.FormatConverter.to_serialized(current_config)
-        # Override current config with golden config
-        for table in config_input:
-            current_config[table] = config_input[table]
-        print(json.dumps(current_config, sort_keys=True,
+        print(json.dumps(updated_config, sort_keys=True,
                          indent=4, cls=minigraph_encoder))
     else:
-        # Deserialized golden config to DB recognized format
-        sonic_cfggen.FormatConverter.to_deserialized(config_input)
-        # Delete table from DB then mod_config to apply golden config
-        click.echo("Removing configDB overriden table first ...")
-        for table in config_input:
-            config_db.delete_table(table)
-        click.echo("Overriding input config to configDB ...")
-        data = sonic_cfggen.FormatConverter.output_to_db(config_input)
-        config_db.mod_config(data)
-        click.echo("Overriding completed. No service is restarted.")
+        override_config_db(config_db, config_input)
+
+
+def is_yang_config_verification_enabled(config_db):
+    device_metadata = config_db.get_entry('DEVICE_METADATA', 'localhost')
+    return 'enable' == device_metadata.get('yang_config_validation', None)
+
+
+def sonic_yang_with_loaded_models(yang_dir):
+    sy = sonic_yang.SonicYang(yang_dir)
+    sy.loadYangModel()
+    return sy
+
+
+def validate_config_by_yang(sy, config_json):
+    try:
+        tmp_config_json = copy.deepcopy(config_json)
+        sy.loadData(tmp_config_json)
+        sy.validate_data_tree()
+    except sonic_yang.SonicYangException as ex:
+        click.secho("Failed to validate config. Error: {}".format(ex), fg="red")
+        sys.exit(1)
+
+
+def update_config(current_config, config_input):
+    # Override current config with golden config
+    for table in config_input:
+        current_config[table] = config_input[table]
+    return current_config
+
+
+def override_config_db(config_db, config_input):
+    # Deserialized golden config to DB recognized format
+    sonic_cfggen.FormatConverter.to_deserialized(config_input)
+    # Delete table from DB then mod_config to apply golden config
+    click.echo("Removing configDB overriden table first ...")
+    for table in config_input:
+        config_db.delete_table(table)
+    click.echo("Overriding input config to configDB ...")
+    data = sonic_cfggen.FormatConverter.output_to_db(config_input)
+    config_db.mod_config(data)
+    click.echo("Overriding completed. No service is restarted.")
+
 
 #
 # 'hostname' command
