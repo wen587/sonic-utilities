@@ -17,6 +17,9 @@ NEW_FEATURE_CONFIG = os.path.join(DATA_DIR, "new_feature_config.json")
 FULL_CONFIG_OVERRIDE = os.path.join(DATA_DIR, "full_config_override.json")
 PORT_CONFIG_OVERRIDE = os.path.join(DATA_DIR, "port_config_override.json")
 EMPTY_TABLE_REMOVAL = os.path.join(DATA_DIR, "empty_table_removal.json")
+RUNNING_CONFIG_YANG_FAILURE = os.path.join(DATA_DIR, "running_config_yang_failure.json")
+GOLDEN_INPUT_YANG_FAILURE = os.path.join(DATA_DIR, "golden_input_yang_failure.json")
+FINAL_CONFIG_YANG_FAILURE = os.path.join(DATA_DIR, "final_config_yang_failure.json")
 
 # Load sonic-cfggen from source since /usr/local/bin/sonic-cfggen does not have .py extension.
 sonic_cfggen = load_module_from_source('sonic_cfggen', '/usr/local/bin/sonic-cfggen')
@@ -162,6 +165,66 @@ class TestConfigOverride(object):
             current_config = read_config_db(db.cfgdb)
             assert result.exit_code == 0
             assert current_config == expected_config
+
+    def test_yang_verification_enabled(self):
+        def is_yang_config_verification_enabled_side_effect(filename):
+            return True
+        db = Db()
+        with open(FULL_CONFIG_OVERRIDE, "r") as f:
+            read_data = json.load(f)
+        with mock.patch('config.main.is_yang_config_verification_enabled',
+                        mock.MagicMock(side_effect=is_yang_config_verification_enabled_side_effect)):
+            self.check_override_config_table(
+                db, config, read_data['running_config'], read_data['golden_config'],
+                read_data['expected_config'])
+
+    def test_running_config_yang_failure(self):
+        def is_yang_config_verification_enabled_side_effect(filename):
+            return True
+        db = Db()
+        with open(RUNNING_CONFIG_YANG_FAILURE, "r") as f:
+            read_data = json.load(f)
+        with mock.patch('config.main.is_yang_config_verification_enabled',
+                        mock.MagicMock(side_effect=is_yang_config_verification_enabled_side_effect)):
+            self.check_yang_verification_failure(
+                db, config, read_data['running_config'], read_data['golden_config'])
+
+    def test_golden_input_yang_failure(self):
+        def is_yang_config_verification_enabled_side_effect(filename):
+            return True
+        db = Db()
+        with open(GOLDEN_INPUT_YANG_FAILURE, "r") as f:
+            read_data = json.load(f)
+        with mock.patch('config.main.is_yang_config_verification_enabled',
+                        mock.MagicMock(side_effect=is_yang_config_verification_enabled_side_effect)):
+            self.check_yang_verification_failure(
+                db, config, read_data['running_config'], read_data['golden_config'])
+
+    def test_final_config_yang_failure(self):
+        def is_yang_config_verification_enabled_side_effect(filename):
+            return True
+        db = Db()
+        with open(FINAL_CONFIG_YANG_FAILURE, "r") as f:
+            read_data = json.load(f)
+        with mock.patch('config.main.is_yang_config_verification_enabled',
+                        mock.MagicMock(side_effect=is_yang_config_verification_enabled_side_effect)):
+            self.check_yang_verification_failure(
+                db, config, read_data['running_config'], read_data['golden_config'])
+
+    def check_yang_verification_failure(self, db, config, running_config,
+                                        golden_config):
+        def read_json_file_side_effect(filename):
+            return golden_config
+        with mock.patch('config.main.read_json_file',
+                        mock.MagicMock(side_effect=read_json_file_side_effect)):
+            write_init_config_db(db.cfgdb, running_config)
+
+            runner = CliRunner()
+            result = runner.invoke(config.config.commands["override-config-table"],
+                                   ['golden_config_db.json'], obj=db)
+            assert result.exit_code == 1
+            assert "Failed to validate config. Error:" in result.output
+
 
     @classmethod
     def teardown_class(cls):

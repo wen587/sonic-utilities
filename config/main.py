@@ -13,6 +13,7 @@ import sys
 import time
 import itertools
 import sonic_yang
+import copy
 
 from collections import OrderedDict
 from generic_config_updater.generic_updater import GenericUpdater, ConfigFormat
@@ -1900,10 +1901,11 @@ def validate_config_by_yang(sy, config_json):
 
 
 def update_config(current_config, config_input):
+    updated_config = copy.deepcopy(current_config)
     # Override current config with golden config
     for table in config_input:
-        current_config[table] = config_input[table]
-    return current_config
+        updated_config[table] = config_input[table]
+    return updated_config
 
 
 def override_config_db(config_db, config_input):
