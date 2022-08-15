@@ -1866,11 +1866,11 @@ def override_config_table(db, input_config_db, dry_run):
     if yang_enabled:
         sy = sonic_yang_with_loaded_models(YANG_DIR)
         # Validate running config
-        validate_config_by_yang(sy, current_config)
+        validate_config_by_yang(sy, current_config, "current_config")
         # Validate input config
-        validate_config_by_yang(sy, config_input)
+        validate_config_by_yang(sy, config_input, "config_input")
         # Validate updated whole config
-        validate_config_by_yang(sy, updated_config)
+        validate_config_by_yang(sy, updated_config, "updated_config")
 
     if dry_run:
         print(json.dumps(updated_config, sort_keys=True,
@@ -1890,13 +1890,13 @@ def sonic_yang_with_loaded_models(yang_dir):
     return sy
 
 
-def validate_config_by_yang(sy, config_json):
+def validate_config_by_yang(sy, config_json, jname):
     try:
         tmp_config_json = copy.deepcopy(config_json)
         sy.loadData(tmp_config_json)
         sy.validate_data_tree()
     except sonic_yang.SonicYangException as ex:
-        click.secho("Failed to validate config. Error: {}".format(ex), fg="red")
+        click.secho("Failed to validate {}. Error: {}".format(jname, ex), fg="magenta")
         sys.exit(1)
 
 

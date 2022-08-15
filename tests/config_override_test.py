@@ -187,7 +187,7 @@ class TestConfigOverride(object):
         with mock.patch('config.main.is_yang_config_verification_enabled',
                         mock.MagicMock(side_effect=is_yang_config_verification_enabled_side_effect)):
             self.check_yang_verification_failure(
-                db, config, read_data['running_config'], read_data['golden_config'])
+                db, config, read_data['running_config'], read_data['golden_config'], "current_config")
 
     def test_golden_input_yang_failure(self):
         def is_yang_config_verification_enabled_side_effect(filename):
@@ -198,7 +198,7 @@ class TestConfigOverride(object):
         with mock.patch('config.main.is_yang_config_verification_enabled',
                         mock.MagicMock(side_effect=is_yang_config_verification_enabled_side_effect)):
             self.check_yang_verification_failure(
-                db, config, read_data['running_config'], read_data['golden_config'])
+                db, config, read_data['running_config'], read_data['golden_config'], "config_input")
 
     def test_final_config_yang_failure(self):
         def is_yang_config_verification_enabled_side_effect(filename):
@@ -209,10 +209,10 @@ class TestConfigOverride(object):
         with mock.patch('config.main.is_yang_config_verification_enabled',
                         mock.MagicMock(side_effect=is_yang_config_verification_enabled_side_effect)):
             self.check_yang_verification_failure(
-                db, config, read_data['running_config'], read_data['golden_config'])
+                db, config, read_data['running_config'], read_data['golden_config'], "updated_config")
 
     def check_yang_verification_failure(self, db, config, running_config,
-                                        golden_config):
+                                        golden_config, jname):
         def read_json_file_side_effect(filename):
             return golden_config
         with mock.patch('config.main.read_json_file',
@@ -223,7 +223,7 @@ class TestConfigOverride(object):
             result = runner.invoke(config.config.commands["override-config-table"],
                                    ['golden_config_db.json'], obj=db)
             assert result.exit_code == 1
-            assert "Failed to validate config. Error:" in result.output
+            assert "Failed to validate {}. Error:".format(jname) in result.output
 
 
     @classmethod
