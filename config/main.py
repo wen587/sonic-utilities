@@ -1860,7 +1860,7 @@ def override_config_table(db, input_config_db, dry_run):
 
     updated_config = update_config(current_config, config_input)
 
-    yang_enabled = is_yang_config_verification_enabled(config_db)
+    yang_enabled = device_info.is_yang_config_validation_enabled(config_db)
     if yang_enabled:
         # The ConfigMgmt will load YANG and running
         # config during initialization.

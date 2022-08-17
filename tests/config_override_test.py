@@ -170,7 +170,7 @@ class TestConfigOverride(object):
             assert current_config == expected_config
 
     def test_yang_verification_enabled(self):
-        def is_yang_config_verification_enabled_side_effect(filename):
+        def is_yang_config_validation_enabled_side_effect(filename):
             return True
 
         def config_mgmt_side_effect():
@@ -179,13 +179,14 @@ class TestConfigOverride(object):
         db = Db()
         with open(FULL_CONFIG_OVERRIDE, "r") as f:
             read_data = json.load(f)
+
         # ConfigMgmt will call ConfigDBConnector to load default config_db.json.
         # Here I modify the ConfigMgmt initialization and make it initiated with
         # a source file which share the same as what we write to cfgdb.
         CONFIG_DB_JSON_FILE = "startConfigDb.json"
         write_config_to_file(read_data['running_config'], CONFIG_DB_JSON_FILE)
-        with mock.patch('config.main.is_yang_config_verification_enabled',
-                        mock.MagicMock(side_effect=is_yang_config_verification_enabled_side_effect)), \
+        with mock.patch('config.main.device_info.is_yang_config_validation_enabled',
+                        mock.MagicMock(side_effect=is_yang_config_validation_enabled_side_effect)), \
              mock.patch('config.main.ConfigMgmt',
                         mock.MagicMock(side_effect=config_mgmt_side_effect)):
             self.check_override_config_table(
@@ -194,35 +195,35 @@ class TestConfigOverride(object):
 
 
     def test_running_config_yang_failure(self):
-        def is_yang_config_verification_enabled_side_effect(filename):
+        def is_yang_config_validation_enabled_side_effect(filename):
             return True
         db = Db()
         with open(RUNNING_CONFIG_YANG_FAILURE, "r") as f:
             read_data = json.load(f)
-        with mock.patch('config.main.is_yang_config_verification_enabled',
-                        mock.MagicMock(side_effect=is_yang_config_verification_enabled_side_effect)):
+        with mock.patch('config.main.device_info.is_yang_config_validation_enabled',
+                        mock.MagicMock(side_effect=is_yang_config_validation_enabled_side_effect)):
             self.check_yang_verification_failure(
                 db, config, read_data['running_config'], read_data['golden_config'], "running config")
 
     def test_golden_input_yang_failure(self):
-        def is_yang_config_verification_enabled_side_effect(filename):
+        def is_yang_config_validation_enabled_side_effect(filename):
             return True
         db = Db()
         with open(GOLDEN_INPUT_YANG_FAILURE, "r") as f:
             read_data = json.load(f)
-        with mock.patch('config.main.is_yang_config_verification_enabled',
-                        mock.MagicMock(side_effect=is_yang_config_verification_enabled_side_effect)):
+        with mock.patch('config.main.device_info.is_yang_config_validation_enabled',
+                        mock.MagicMock(side_effect=is_yang_config_validation_enabled_side_effect)):
             self.check_yang_verification_failure(
                 db, config, read_data['running_config'], read_data['golden_config'], "config_input")
 
     def test_final_config_yang_failure(self):
-        def is_yang_config_verification_enabled_side_effect(filename):
+        def is_yang_config_validation_enabled_side_effect(filename):
             return True
         db = Db()
         with open(FINAL_CONFIG_YANG_FAILURE, "r") as f:
             read_data = json.load(f)
-        with mock.patch('config.main.is_yang_config_verification_enabled',
-                        mock.MagicMock(side_effect=is_yang_config_verification_enabled_side_effect)):
+        with mock.patch('config.main.device_info.is_yang_config_validation_enabled',
+                        mock.MagicMock(side_effect=is_yang_config_validation_enabled_side_effect)):
             self.check_yang_verification_failure(
                 db, config, read_data['running_config'], read_data['golden_config'], "updated_config")
 
@@ -234,6 +235,9 @@ class TestConfigOverride(object):
         def config_mgmt_side_effect():
             return config_mgmt.ConfigMgmt(source=CONFIG_DB_JSON_FILE)
 
+        # ConfigMgmt will call ConfigDBConnector to load default config_db.json.
+        # Here I modify the ConfigMgmt initialization and make it initiated with
+        # a source file which share the same as what we write to cfgdb.
         CONFIG_DB_JSON_FILE = "startConfigDb.json"
         write_config_to_file(running_config, CONFIG_DB_JSON_FILE)
         with mock.patch('config.main.read_json_file',
