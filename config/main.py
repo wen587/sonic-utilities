@@ -12,7 +12,6 @@ import subprocess
 import sys
 import time
 import itertools
-import sonic_yang
 import copy
 
 from collections import OrderedDict
@@ -47,7 +46,7 @@ from . import nat
 from . import vlan
 from . import vxlan
 from . import plugins
-from .config_mgmt import ConfigMgmtDPB
+from .config_mgmt import ConfigMgmtDPB, ConfigMgmt
 from . import mclag
 from . import syslog
 
@@ -79,7 +78,6 @@ INTF_KEY = "interfaces"
 DEFAULT_GOLDEN_CONFIG_DB_FILE = '/etc/sonic/golden_config_db.json'
 
 INIT_CFG_FILE = '/etc/sonic/init_cfg.json'
-YANG_DIR = '/usr/local/yang-models'
 
 DEFAULT_NAMESPACE = ''
 CFG_LOOPBACK_PREFIX = "Loopback"
@@ -1864,13 +1862,18 @@ def override_config_table(db, input_config_db, dry_run):
 
     yang_enabled = is_yang_config_verification_enabled(config_db)
     if yang_enabled:
-        sy = sonic_yang_with_loaded_models(YANG_DIR)
-        # Validate running config
-        validate_config_by_yang(sy, current_config, "current_config")
+        # The ConfigMgmt will load YANG and validate
+        # runnning config during initialization.
+        try:
+            cm = ConfigMgmt()
+        except Exception as ex:
+            click.secho("Failed to validate running config. Error: {}".format(ex), fg="magenta")
+            sys.exit(1)
+
         # Validate input config
-        validate_config_by_yang(sy, config_input, "config_input")
+        validate_config_by_cm(cm, config_input, "config_input")
         # Validate updated whole config
-        validate_config_by_yang(sy, updated_config, "updated_config")
+        validate_config_by_cm(cm, updated_config, "updated_config")
 
     if dry_run:
         print(json.dumps(updated_config, sort_keys=True,
@@ -1884,18 +1887,12 @@ def is_yang_config_verification_enabled(config_db):
     return 'enable' == device_metadata.get('yang_config_validation', None)
 
 
-def sonic_yang_with_loaded_models(yang_dir):
-    sy = sonic_yang.SonicYang(yang_dir)
-    sy.loadYangModel()
-    return sy
-
-
-def validate_config_by_yang(sy, config_json, jname):
+def validate_config_by_cm(cm, config_json, jname):
+    tmp_config_json = copy.deepcopy(config_json)
     try:
-        tmp_config_json = copy.deepcopy(config_json)
-        sy.loadData(tmp_config_json)
-        sy.validate_data_tree()
-    except sonic_yang.SonicYangException as ex:
+        cm.loadData(tmp_config_json)
+        cm.validateConfigData()
+    except Exception as ex:
         click.secho("Failed to validate {}. Error: {}".format(jname, ex), fg="magenta")
         sys.exit(1)
 
