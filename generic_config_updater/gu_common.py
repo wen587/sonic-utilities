@@ -665,7 +665,8 @@ class PathAddressing:
         clist = model.get('list')
         # Container contains a single list, just return it
         # TODO: check if matching also by name is necessary
-        if isinstance(clist, dict):
+        if isinstance(clist, dict) and \
+            clist['@name'] == model['@name']+"_LIST":
             return clist
 
         if isinstance(clist, list):
