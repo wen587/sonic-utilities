@@ -1862,10 +1862,11 @@ def override_config_table(db, input_config_db, dry_run):
 
     yang_enabled = is_yang_config_verification_enabled(config_db)
     if yang_enabled:
-        # The ConfigMgmt will load YANG and validate
-        # runnning config during initialization.
+        # The ConfigMgmt will load YANG and running
+        # config during initialization.
         try:
             cm = ConfigMgmt()
+            cm.validateConfigData()
         except Exception as ex:
             click.secho("Failed to validate running config. Error: {}".format(ex), fg="magenta")
             sys.exit(1)
