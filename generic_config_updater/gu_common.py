@@ -154,14 +154,15 @@ class ConfigWrapper:
                         return False, f"PORT '{port}' has an invalid lane '{lane}'"
                 port_to_lanes_map[port] = lanes
 
-        # Validate lanes are unique
-        existing = {}
-        for port in port_to_lanes_map:
-            lanes = port_to_lanes_map[port]
-            for lane in lanes:
-                if lane in existing:
-                    return False, f"'{lane}' lane is used multiple times in PORT: {set([port, existing[lane]])}"
-                existing[lane] = port
+        #TODO: uncomment dup lane check
+        ## Validate lanes are unique
+        #existing = {}
+        #for port in port_to_lanes_map:
+        #    lanes = port_to_lanes_map[port]
+        #    for lane in lanes:
+        #        if lane in existing:
+        #            return False, f"'{lane}' lane is used multiple times in PORT: {set([port, existing[lane]])}"
+        #        existing[lane] = port
         return True, None
 
     def validate_bgp_peer_group(self, config_db):
