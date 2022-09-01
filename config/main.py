@@ -1883,11 +1883,6 @@ def override_config_table(db, input_config_db, dry_run):
         override_config_db(config_db, config_input)
 
 
-def is_yang_config_verification_enabled(config_db):
-    device_metadata = config_db.get_entry('DEVICE_METADATA', 'localhost')
-    return 'enable' == device_metadata.get('yang_config_validation', None)
-
-
 def validate_config_by_cm(cm, config_json, jname):
     tmp_config_json = copy.deepcopy(config_json)
     try:
