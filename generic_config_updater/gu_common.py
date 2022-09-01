@@ -116,7 +116,7 @@ class ConfigWrapper:
         # TODO: Move these validators to YANG models
         supplemental_yang_validators = [self.validate_bgp_peer_group,
                                         self.validate_lanes]
-        validators_params = [(config_db_as_json,)
+        validators_params = [(config_db_as_json,),
                              (config_db_as_json, False)]
 
         try:
