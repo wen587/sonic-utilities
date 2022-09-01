@@ -116,6 +116,8 @@ class ConfigWrapper:
         # TODO: Move these validators to YANG models
         supplemental_yang_validators = [self.validate_bgp_peer_group,
                                         self.validate_lanes]
+        validators_params = [(config_db_as_json,)
+                             (config_db_as_json, False)]
 
         try:
             tmp_config_db_as_json = copy.deepcopy(config_db_as_json)
@@ -124,8 +126,9 @@ class ConfigWrapper:
 
             sy.validate_data_tree()
 
-            for supplemental_yang_validator in supplemental_yang_validators:
-                success, error = supplemental_yang_validator(config_db_as_json)
+            for supplemental_yang_validator, validator_params in \
+                    zip(supplemental_yang_validators, validators_params):
+                success, error = supplemental_yang_validator(*validator_params)
                 if not success:
                     return success, error
         except sonic_yang.SonicYangException as ex:
@@ -133,7 +136,7 @@ class ConfigWrapper:
 
         return True, None
 
-    def validate_lanes(self, config_db):
+    def validate_lanes(self, config_db, unique_lanes=True):
         if "PORT" not in config_db:
             return True, None
 
@@ -154,15 +157,15 @@ class ConfigWrapper:
                         return False, f"PORT '{port}' has an invalid lane '{lane}'"
                 port_to_lanes_map[port] = lanes
 
-        #TODO: uncomment dup lane check
-        ## Validate lanes are unique
-        #existing = {}
-        #for port in port_to_lanes_map:
-        #    lanes = port_to_lanes_map[port]
-        #    for lane in lanes:
-        #        if lane in existing:
-        #            return False, f"'{lane}' lane is used multiple times in PORT: {set([port, existing[lane]])}"
-        #        existing[lane] = port
+        if unique_lanes:
+            # Validate lanes are unique
+            existing = {}
+            for port in port_to_lanes_map:
+                lanes = port_to_lanes_map[port]
+                for lane in lanes:
+                    if lane in existing:
+                        return False, f"'{lane}' lane is used multiple times in PORT: {set([port, existing[lane]])}"
+                    existing[lane] = port
         return True, None
 
     def validate_bgp_peer_group(self, config_db):

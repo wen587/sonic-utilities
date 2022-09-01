@@ -307,24 +307,23 @@ class TestConfigWrapper(unittest.TestCase):
             }}
         self.validate_lanes(config)
 
-    #TODO: uncomment dup lane check test
-    #def test_validate_lanes__same_valid_lanes_single_port__failure(self):
-    #    config = {"PORT": {"Ethernet0": {"lanes": "65 \r\t\n, 65", "speed":"10000"}}}
-    #    self.validate_lanes(config, '65')
+    def test_validate_lanes__same_valid_lanes_single_port__failure(self):
+        config = {"PORT": {"Ethernet0": {"lanes": "65 \r\t\n, 65", "speed":"10000"}}}
+        self.validate_lanes(config, '65')
 
-    #def test_validate_lanes__same_valid_lanes_multi_ports__failure(self):
-    #    config = {"PORT": {
-    #        "Ethernet0": {"lanes": "64, 65, 67", "speed":"10000"},
-    #        "Ethernet1": {"lanes": "66, 67, 68", "speed":"10000"},
-    #        }}
-    #    self.validate_lanes(config, '67')
+    def test_validate_lanes__same_valid_lanes_multi_ports__failure(self):
+        config = {"PORT": {
+            "Ethernet0": {"lanes": "64, 65, 67", "speed":"10000"},
+            "Ethernet1": {"lanes": "66, 67, 68", "speed":"10000"},
+            }}
+        self.validate_lanes(config, '67')
 
-    #def test_validate_lanes__same_valid_lanes_multi_ports_no_spaces__failure(self):
-    #    config = {"PORT": {
-    #        "Ethernet0": {"lanes": "64,65,67", "speed":"10000"},
-    #        "Ethernet1": {"lanes": "66,67,68", "speed":"10000"},
-    #        }}
-    #    self.validate_lanes(config, '67')
+    def test_validate_lanes__same_valid_lanes_multi_ports_no_spaces__failure(self):
+        config = {"PORT": {
+            "Ethernet0": {"lanes": "64,65,67", "speed":"10000"},
+            "Ethernet1": {"lanes": "66,67,68", "speed":"10000"},
+            }}
+        self.validate_lanes(config, '67')
 
     def validate_lanes(self, config_db, expected_error=None):
         # Arrange
