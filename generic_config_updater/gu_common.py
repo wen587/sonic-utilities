@@ -114,10 +114,9 @@ class ConfigWrapper:
         sy = self.create_sonic_yang_with_loaded_models()
 
         # TODO: Move these validators to YANG models
-        supplemental_yang_validators = [self.validate_bgp_peer_group,
-                                        self.validate_lanes]
-        validators_params = [(config_db_as_json,),
-                             (config_db_as_json, False)]
+        supplemental_yang_validators = [
+            self.validate_bgp_peer_group,
+            lambda config_db: self.validate_lanes(config_db, False)]
 
         try:
             tmp_config_db_as_json = copy.deepcopy(config_db_as_json)
@@ -126,9 +125,8 @@ class ConfigWrapper:
 
             sy.validate_data_tree()
 
-            for supplemental_yang_validator, validator_params in \
-                    zip(supplemental_yang_validators, validators_params):
-                success, error = supplemental_yang_validator(*validator_params)
+            for supplemental_yang_validator in supplemental_yang_validators:
+                success, error = supplemental_yang_validator(tmp_config_db_as_json)
                 if not success:
                     return success, error
         except sonic_yang.SonicYangException as ex:
