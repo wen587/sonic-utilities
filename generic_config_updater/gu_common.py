@@ -113,14 +113,9 @@ class ConfigWrapper:
     def validate_config_db_config(self, config_db_as_json):
         sy = self.create_sonic_yang_with_loaded_models()
 
-        dup_lanes_platforms = [
-            'x86_64-arista_7050cx3_32s',
-            'x86_64-dellemc_s5232f_c3538-r0',
-        ]
         # TODO: Move these validators to YANG models
-        supplemental_yang_validators = [
-            self.validate_bgp_peer_group,
-            lambda config_db: self.validate_lanes(config_db, dup_lanes_platforms=dup_lanes_platforms)]
+        supplemental_yang_validators = [self.validate_bgp_peer_group,
+                                        self.validate_lanes]
 
         try:
             tmp_config_db_as_json = copy.deepcopy(config_db_as_json)
@@ -138,7 +133,7 @@ class ConfigWrapper:
 
         return True, None
 
-    def validate_lanes(self, config_db, dup_lanes_platforms=[]):
+    def validate_lanes(self, config_db):
         if "PORT" not in config_db:
             return True, None
 
@@ -160,6 +155,10 @@ class ConfigWrapper:
                 port_to_lanes_map[port] = lanes
 
         # Validate lanes are unique
+        dup_lanes_platforms = [
+            'x86_64-arista_7050cx3_32s',
+            'x86_64-dellemc_s5232f_c3538-r0',
+        ]
         metadata = config_db.get("DEVICE_METADATA", {})
         platform = metadata.get("localhost", {}).get("platform", None)
         if platform not in dup_lanes_platforms:
