@@ -430,6 +430,17 @@ class TestLoadMinigraph(object):
             assert result.exit_code == 0
             assert expected_output in result.output
 
+    def test_load_minigraph_with_non_exist_golden_config_path(self, get_cmd_module):
+        def is_file_side_effect(filename):
+            return True if 'golden_config' in filename else False
+        with mock.patch("utilities_common.cli.run_command", mock.MagicMock(side_effect=mock_run_command_side_effect)) as mock_run_command, \
+                mock.patch('os.path.isfile', mock.MagicMock(side_effect=is_file_side_effect)):
+            (config, show) = get_cmd_module
+            runner = CliRunner()
+            result = runner.invoke(config.config.commands["load_minigraph"], ["-p", "non_exist.json", "-y"])
+            assert result.exit_code != 0
+            assert "Cannot find 'non_exist.json'" in result.output
+
     def test_load_minigraph_with_golden_config_path(self, get_cmd_module):
         def is_file_side_effect(filename):
             return True if 'golden_config' in filename else False
