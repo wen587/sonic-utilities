@@ -155,6 +155,7 @@ class ConfigWrapper:
                 port_to_lanes_map[port] = lanes
 
         # Validate lanes are unique
+        # TODO: Move this attribute (platform with duplicated lanes in ports) to YANG models
         dup_lanes_platforms = [
             'x86_64-arista_7050cx3_32s',
             'x86_64-dellemc_s5232f_c3538-r0',
