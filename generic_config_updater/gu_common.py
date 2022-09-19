@@ -113,10 +113,14 @@ class ConfigWrapper:
     def validate_config_db_config(self, config_db_as_json):
         sy = self.create_sonic_yang_with_loaded_models()
 
+        dup_lanes_platforms = [
+            'x86_64-arista_7050cx3_32s',
+            'x86_64-dellemc_s5232f_c3538-r0',
+        ]
         # TODO: Move these validators to YANG models
         supplemental_yang_validators = [
             self.validate_bgp_peer_group,
-            lambda config_db: self.validate_lanes(config_db, False)]
+            lambda config_db: self.validate_lanes(config_db, dup_lanes_platforms=dup_lanes_platforms)]
 
         try:
             tmp_config_db_as_json = copy.deepcopy(config_db_as_json)
@@ -126,7 +130,7 @@ class ConfigWrapper:
             sy.validate_data_tree()
 
             for supplemental_yang_validator in supplemental_yang_validators:
-                success, error = supplemental_yang_validator(tmp_config_db_as_json)
+                success, error = supplemental_yang_validator(config_db_as_json)
                 if not success:
                     return success, error
         except sonic_yang.SonicYangException as ex:
@@ -134,7 +138,7 @@ class ConfigWrapper:
 
         return True, None
 
-    def validate_lanes(self, config_db, unique_lanes=True):
+    def validate_lanes(self, config_db, dup_lanes_platforms=[]):
         if "PORT" not in config_db:
             return True, None
 
@@ -155,8 +159,10 @@ class ConfigWrapper:
                         return False, f"PORT '{port}' has an invalid lane '{lane}'"
                 port_to_lanes_map[port] = lanes
 
-        if unique_lanes:
-            # Validate lanes are unique
+        # Validate lanes are unique
+        metadata = config_db.get("DEVICE_METADATA", {})
+        platform = metadata.get("localhost", {}).get("platform", None)
+        if platform not in dup_lanes_platforms:
             existing = {}
             for port in port_to_lanes_map:
                 lanes = port_to_lanes_map[port]
