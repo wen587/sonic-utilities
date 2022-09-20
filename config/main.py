@@ -1718,7 +1718,7 @@ def load_mgmt_config(filename):
                 expose_value=False, prompt='Reload config from minigraph?')
 @click.option('-n', '--no_service_restart', default=False, is_flag=True, help='Do not restart docker services')
 @click.option('-t', '--traffic_shift_away', default=False, is_flag=True, help='Keep device in maintenance with TSA')
-@click.option('-p', '--golden_config_path', help='specify Golden Config path')
+@click.option('-p', '--golden_config_path', help='The path of golden config file')
 @clicommon.pass_db
 def load_minigraph(db, no_service_restart, traffic_shift_away, golden_config_path):
     """Reconfigure based on minigraph."""
