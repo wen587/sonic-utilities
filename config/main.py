@@ -1793,7 +1793,7 @@ def load_minigraph(db, no_service_restart, traffic_shift_away, golden_config_pat
     # Keep device isolated with TSA 
     if traffic_shift_away:
         clicommon.run_command("TSA", display_cmd=True)
-        if os.path.isfile(DEFAULT_GOLDEN_CONFIG_DB_FILE):
+        if golden_config_path or not golden_config_path and os.path.isfile(DEFAULT_GOLDEN_CONFIG_DB_FILE):
             log.log_warning("Golden configuration may override System Maintenance state. Please execute TSC to check the current System mode")
             click.secho("[WARNING] Golden configuration may override Traffic-shift-away state. Please execute TSC to check the current System mode")
 
