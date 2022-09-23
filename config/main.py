@@ -1720,8 +1720,8 @@ def load_mgmt_config(filename):
                 expose_value=False, prompt='Reload config from minigraph?')
 @click.option('-n', '--no_service_restart', default=False, is_flag=True, help='Do not restart docker services')
 @click.option('-t', '--traffic_shift_away', default=False, is_flag=True, help='Keep device in maintenance with TSA')
-@click.option('-p', '--golden_config_path', is_flag=True, help='The path of golden config file')
-@click.argument('golden_config', metavar='', required=False)
+@click.option('-p', '--golden_config', default=False, is_flag=True, help='Enable golden config override. Provide golden config path or it will proceed with default path.')
+@click.argument('golden_config_path', metavar='', required=False)
 @clicommon.pass_db
 def load_minigraph(db, no_service_restart, traffic_shift_away, golden_config_path, golden_config):
     """Reconfigure based on minigraph."""
@@ -1796,19 +1796,19 @@ def load_minigraph(db, no_service_restart, traffic_shift_away, golden_config_pat
     # Keep device isolated with TSA 
     if traffic_shift_away:
         clicommon.run_command("TSA", display_cmd=True)
-        if golden_config_path:
+        if golden_config:
             log.log_warning("Golden configuration may override System Maintenance state. Please execute TSC to check the current System mode")
             click.secho("[WARNING] Golden configuration may override Traffic-shift-away state. Please execute TSC to check the current System mode")
 
     # Load golden_config_db.json
-    if golden_config_path:
-        if golden_config is None:
-            golden_config = DEFAULT_GOLDEN_CONFIG_DB_FILE
-        if not os.path.isfile(golden_config):
-            click.secho("Cannot find '{}'!".format(golden_config),
+    if golden_config:
+        if golden_config_path is None:
+            golden_config_path = DEFAULT_GOLDEN_CONFIG_DB_FILE
+        if not os.path.isfile(golden_config_path):
+            click.secho("Cannot find '{}'!".format(golden_config_path),
                         fg='magenta')
             raise click.Abort()
-        override_config_by(golden_config)
+        override_config_by(golden_config_path)
 
     # We first run "systemctl reset-failed" to remove the "failed"
     # status from all services before we attempt to restart them

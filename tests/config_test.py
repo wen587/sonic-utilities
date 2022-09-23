@@ -416,7 +416,7 @@ class TestLoadMinigraph(object):
                 mock.patch('os.path.isfile', mock.MagicMock(side_effect=is_file_side_effect)):
             (config, show) = get_cmd_module
             runner = CliRunner()
-            result = runner.invoke(config.config.commands["load_minigraph"], ["--golden_config_path", "non_exist.json", "-y"])
+            result = runner.invoke(config.config.commands["load_minigraph"], ["--golden_config", "non_exist.json", "-y"])
             assert result.exit_code != 0
             assert "Cannot find 'non_exist.json'" in result.output
 
@@ -427,7 +427,7 @@ class TestLoadMinigraph(object):
                 mock.patch('os.path.isfile', mock.MagicMock(side_effect=is_file_side_effect)):
             (config, show) = get_cmd_module
             runner = CliRunner()
-            result = runner.invoke(config.config.commands["load_minigraph"], ["--golden_config_path", "golden_config.json", "-y"])
+            result = runner.invoke(config.config.commands["load_minigraph"], ["--golden_config", "golden_config.json", "-y"])
             assert result.exit_code == 0
             assert "config override-config-table golden_config.json" in result.output
 
@@ -438,7 +438,7 @@ class TestLoadMinigraph(object):
                 mock.patch('os.path.isfile', mock.MagicMock(side_effect=is_file_side_effect)):
             (config, show) = get_cmd_module
             runner = CliRunner()
-            result = runner.invoke(config.config.commands["load_minigraph"], ["--golden_config_path", "-y"])
+            result = runner.invoke(config.config.commands["load_minigraph"], ["--golden_config", "-y"])
             assert result.exit_code == 0
             assert "config override-config-table /etc/sonic/golden_config_db.json" in result.output
 
@@ -462,7 +462,7 @@ class TestLoadMinigraph(object):
                 db = Db()
                 golden_config = {}
                 runner = CliRunner()
-                result = runner.invoke(config.config.commands["load_minigraph"], ["-ty", "--golden_config_path"])
+                result = runner.invoke(config.config.commands["load_minigraph"], ["-ty", "--golden_config"])
                 print(result.exit_code)
                 print(result.output)
                 traceback.print_tb(result.exc_info[2])
