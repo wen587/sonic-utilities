@@ -812,46 +812,7 @@
             [
                 {
                     "op": "remove",
-                    "path": "/ACL_TABLE"
-                }
-            ],
-            [
-                {
-                    "op": "add",
-                    "path": "/ACL_TABLE",
-                    "value": {
-                        "NO-NSW-PACL-V4": {
-                            "type": "L3"
-                        }
-                    }
-                }
-            ],
-            [
-                {
-                    "op": "add",
-                    "path": "/ACL_TABLE/NO-NSW-PACL-V4/ports",
-                    "value": [
-                        "Ethernet0"
-                    ]
-                }
-            ],
-            [
-                {
-                    "op": "remove",
                     "path": "/VLAN_MEMBER"
-                }
-            ],
-            [
-                {
-                    "op": "add",
-                    "path": "/ACL_TABLE/NO-NSW-PACL-V4/policy_desc",
-                    "value": "NO-NSW-PACL-V4"
-                }
-            ],
-            [
-                {
-                    "op": "remove",
-                    "path": "/ACL_TABLE/NO-NSW-PACL-V4/ports"
                 }
             ],
             [
@@ -867,8 +828,8 @@
                     "value": {
                         "Ethernet0": {
                             "alias": "Eth1/1",
-                            "lanes": "65",
                             "description": "",
+                            "lanes": "65",
                             "speed": "10000"
                         }
                     }
@@ -880,8 +841,8 @@
                     "path": "/PORT/Ethernet3",
                     "value": {
                         "alias": "Eth1/4",
-                        "lanes": "68",
                         "description": "",
+                        "lanes": "68",
                         "speed": "10000"
                     }
                 }
@@ -892,8 +853,8 @@
                     "path": "/PORT/Ethernet2",
                     "value": {
                         "alias": "Eth1/3",
-                        "lanes": "67",
                         "description": "",
+                        "lanes": "67",
                         "speed": "10000"
                     }
                 }
@@ -904,8 +865,8 @@
                     "path": "/PORT/Ethernet1",
                     "value": {
                         "alias": "Eth1/2",
-                        "lanes": "66",
                         "description": "",
+                        "lanes": "66",
                         "speed": "10000"
                     }
                 }
@@ -1126,6 +1087,12 @@
             ],
             [
                 {
+                    "op": "remove",
+                    "path": "/ACL_TABLE/NO-NSW-PACL-V4/ports/0"
+                }
+            ],
+            [
+                {
                     "op": "replace",
                     "path": "/PORT/Ethernet0/alias",
                     "value": "Eth1"
@@ -1184,7 +1151,7 @@
             [
                 {
                     "op": "remove",
-                    "path": "/ACL_TABLE/NO-NSW-PACL-V4/ports/1"
+                    "path": "/ACL_TABLE/NO-NSW-PACL-V4/ports/0"
                 }
             ],
             [
@@ -1196,13 +1163,20 @@
             [
                 {
                     "op": "remove",
-                    "path": "/ACL_TABLE/NO-NSW-PACL-V4/ports/1"
+                    "path": "/ACL_TABLE/NO-NSW-PACL-V4/ports/0"
                 }
             ],
             [
                 {
                     "op": "remove",
                     "path": "/PORT/Ethernet2"
+                }
+            ],
+            [
+                {
+                    "op": "add",
+                    "path": "/ACL_TABLE/NO-NSW-PACL-V4/ports/0",
+                    "value": "Ethernet0"
                 }
             ],
             [
@@ -1227,64 +1201,6 @@
                 {
                     "op": "remove",
                     "path": "/VLAN_MEMBER"
-                }
-            ],
-            [
-                {
-                    "op": "add",
-                    "path": "/ACL_TABLE/NO-NSW-PACL-V4/ports",
-                    "value": [
-                        "Ethernet0"
-                    ]
-                }
-            ],
-            [
-                {
-                    "op": "remove",
-                    "path": "/ACL_TABLE"
-                }
-            ],
-            [
-                {
-                    "op": "add",
-                    "path": "/VLAN_MEMBER",
-                    "value": {
-                        "Vlan100|Ethernet0": {
-                            "tagging_mode": "untagged"
-                        }
-                    }
-                }
-            ],
-            [
-                {
-                    "op": "add",
-                    "path": "/ACL_TABLE",
-                    "value": {
-                        "NO-NSW-PACL-V4": {
-                            "type": "L3"
-                        }
-                    }
-                }
-            ],
-            [
-                {
-                    "op": "add",
-                    "path": "/ACL_TABLE/NO-NSW-PACL-V4/ports",
-                    "value": [
-                        "Ethernet0"
-                    ]
-                }
-            ],
-            [
-                {
-                    "op": "remove",
-                    "path": "/VLAN_MEMBER"
-                }
-            ],
-            [
-                {
-                    "op": "remove",
-                    "path": "/ACL_TABLE/NO-NSW-PACL-V4/ports"
                 }
             ],
             [
@@ -1316,13 +1232,6 @@
                             "tagging_mode": "untagged"
                         }
                     }
-                }
-            ],
-            [
-                {
-                    "op": "add",
-                    "path": "/ACL_TABLE/NO-NSW-PACL-V4/policy_desc",
-                    "value": "NO-NSW-PACL-V4"
                 }
             ],
             [
@@ -2567,64 +2476,6 @@
             ],
             [
                 {
-                    "op": "add",
-                    "path": "/ACL_TABLE/NO-NSW-PACL-V4/ports",
-                    "value": [
-                        "Ethernet0"
-                    ]
-                }
-            ],
-            [
-                {
-                    "op": "remove",
-                    "path": "/ACL_TABLE"
-                }
-            ],
-            [
-                {
-                    "op": "add",
-                    "path": "/VLAN_MEMBER",
-                    "value": {
-                        "Vlan100|Ethernet0": {
-                            "tagging_mode": "untagged"
-                        }
-                    }
-                }
-            ],
-            [
-                {
-                    "op": "add",
-                    "path": "/ACL_TABLE",
-                    "value": {
-                        "NO-NSW-PACL-V4": {
-                            "type": "L3"
-                        }
-                    }
-                }
-            ],
-            [
-                {
-                    "op": "add",
-                    "path": "/ACL_TABLE/NO-NSW-PACL-V4/ports",
-                    "value": [
-                        "Ethernet0"
-                    ]
-                }
-            ],
-            [
-                {
-                    "op": "remove",
-                    "path": "/VLAN_MEMBER"
-                }
-            ],
-            [
-                {
-                    "op": "remove",
-                    "path": "/ACL_TABLE/NO-NSW-PACL-V4/ports"
-                }
-            ],
-            [
-                {
                     "op": "remove",
                     "path": "/PORT"
                 }
@@ -2652,13 +2503,6 @@
                             "tagging_mode": "untagged"
                         }
                     }
-                }
-            ],
-            [
-                {
-                    "op": "add",
-                    "path": "/ACL_TABLE/NO-NSW-PACL-V4/policy_desc",
-                    "value": "NO-NSW-PACL-V4"
                 }
             ],
             [
