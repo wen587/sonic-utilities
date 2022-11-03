@@ -753,6 +753,41 @@ class TestMoveWrapper(unittest.TestCase):
         # Assert
         self.assertIs(self.any_diff, actual)
 
+class TestJsonPointerFilter(unittest.TestCase):
+    def test_get_paths__common_prefix__exact_match_returned(self):
+        config = {
+            "BUFFER_PG": {
+                "Ethernet1|0": {},
+                "Ethernet12|0": {},
+                "Ethernet120|0": {},  # 'Ethernet12' is a common prefix with the previous line
+            },
+        }
+
+        filter = ps.JsonPointerFilter([["BUFFER_PG", "Ethernet12|*"]], PathAddressing())
+
+        expected_paths = ["/BUFFER_PG/Ethernet12|0"]
+
+        actual_paths = list(filter.get_paths(config))
+
+        self.assertCountEqual(expected_paths, actual_paths)
+
+    def test_get_paths__common_suffix__exact_match_returned(self):
+        config = {
+            "QUEUE": {
+                "Ethernet1|0": {},
+                "Ethernet1|10": {},
+                "Ethernet1|110": {}, # 10 is a common suffix with the previous line
+            },
+        }
+
+        filter = ps.JsonPointerFilter([["QUEUE", "*|10"]], PathAddressing())
+
+        expected_paths = ["/QUEUE/Ethernet1|10"]
+
+        actual_paths = list(filter.get_paths(config))
+
+        self.assertCountEqual(expected_paths, actual_paths)
+
 class TestRequiredValueIdentifier(unittest.TestCase):
     def test_hard_coded_required_value_data(self):
         identifier = ps.RequiredValueIdentifier(PathAddressing())
@@ -1849,6 +1884,22 @@ class TestRequiredValueMoveValidator(unittest.TestCase):
                     }
                 })
             },
+            # Additional cases where the full port is getting deleted
+            # If port is getting deleted, there is no point in checking if there are critical changes depending on it
+            "PORT_UP__STATUS_CHANGING__UNDER_PORT__PORT_EXIST__PORT_DELETION": {
+                "expected": True,
+                "config": Files.CONFIG_DB_WITH_PORT_CRITICAL,
+                "move": ps.JsonMove.from_operation({ "op": "remove", "path": "/PORT/Ethernet32" })
+            },
+            "PORT_UP__STATUS_CHANGING__NOT_UNDER_PORT__PORT_EXIST__PORT_DELETION": {
+                "expected": True,
+                "config": Files.CONFIG_DB_WITH_PORT_CRITICAL,
+                "target_config": self._apply_operations(Files.CONFIG_DB_WITH_PORT_CRITICAL, [
+                    { "op": "remove", "path": "/PORT/Ethernet28" },
+                    { "op": "remove", "path": "/BUFFER_PG/Ethernet28|0" },
+                ]),
+                "move": ps.JsonMove.from_operation({ "op": "remove", "path": "/PORT/Ethernet28" })
+            },
         }
 
     def test_validate__no_critical_port_changes(self):
@@ -1922,7 +1973,7 @@ class TestTableLevelMoveGenerator(unittest.TestCase):
         self.verify(current = {"ExistingTable1": { "Key1": "Value1" }, "ExistingTable2": {}},
                     target = {"ExistingTable1": {}, "ExistingTable2": { "Key2": "Value2" }},
                     ex_ops = [])
-    
+
     def test_generate__multiple_cases__deletion_precedes_addition(self):
         self.verify(current = {"CommonTable": { "Key1": "Value1" }, "CurrentTable": {}},
                     target = {"CommonTable": {}, "TargetTable": { "Key2": "Value2" }},
@@ -2390,7 +2441,7 @@ class TestRequiredValueMoveExtender(unittest.TestCase):
             {"op":"add", "path":"/PORT/Ethernet16/admin_status", "value":"up"},
             {"op":"add", "path":"/PORT/Ethernet12/mtu", "value":"9000"},
             # Will not be part of the move, only in the final target config
-            {"op":"add", "path":"/PORT/Ethernet16/mtu", "value":"9000"}, 
+            {"op":"add", "path":"/PORT/Ethernet16/mtu", "value":"9000"},
         ])
         move = ps.JsonMove.from_operation({
             "op":"replace",
@@ -2444,7 +2495,7 @@ class TestRequiredValueMoveExtender(unittest.TestCase):
             {"op":"add", "path":"/PORT/Ethernet16/admin_status", "value":"up"},
             {"op":"add", "path":"/PORT/Ethernet12/mtu", "value":"9000"},
             # Will not be part of the move, only in the final target config
-            {"op":"add", "path":"/PORT/Ethernet16/mtu", "value":"9000"}, 
+            {"op":"add", "path":"/PORT/Ethernet16/mtu", "value":"9000"},
         ])
         move = ps.JsonMove.from_operation({
             "op":"replace",
@@ -2501,6 +2552,26 @@ class TestRequiredValueMoveExtender(unittest.TestCase):
                 ])
             }
         ]
+
+        # Act
+        actual = self.extender.extend(move, diff)
+
+        # Assert
+        self._verify_moves(expected, actual)
+
+    def test_extend__port_deletion__no_extension(self):
+        # Arrange
+        move = ps.JsonMove.from_operation({
+            "op":"remove",
+            "path":"/PORT/Ethernet28"
+        })
+        current_config = Files.CONFIG_DB_WITH_PORT_CRITICAL
+        target_config = self._apply_operations(Files.CONFIG_DB_WITH_PORT_CRITICAL, [
+            { "op": "remove", "path": "/PORT/Ethernet28" },
+            { "op": "remove", "path": "/BUFFER_PG/Ethernet28|0" }
+        ])
+        diff = ps.Diff(current_config, target_config)
+        expected = []
 
         # Act
         actual = self.extender.extend(move, diff)
