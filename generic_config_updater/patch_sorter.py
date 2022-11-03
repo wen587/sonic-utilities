@@ -1070,6 +1070,9 @@ class LaneReplacementMoveGenerator:
         current_config = diff.current_config
         target_config = diff.target_config # Final config after applying whole patch
 
+        if "PORT" not in current_config:
+            return
+
         current_ports = current_config["PORT"]
         if not current_ports:
             return
