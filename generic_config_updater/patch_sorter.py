@@ -586,7 +586,7 @@ class LaneReplacementMoveValidator:
 
         simulated_port = self.path_addressing.get_from_path(simulated_config, f"/PORT/{port_name}")
 
-        if simulated_port == None:
+        if simulated_port is None:
             return True
 
         current_admin_status = self.path_addressing.get_from_path(current_config, f"/PORT/{port_name}/admin_status")
@@ -981,7 +981,7 @@ class RequiredValueMoveValidator:
                 for required_path, required_value in data[path]:
                     current_value = self.identifier.get_value_or_default(current_config, required_path)
                     simulated_value = self.identifier.get_value_or_default(simulated_config, required_path)
-                    if simulated_value == None: # Simulated config does not have this value at all.
+                    if simulated_value is None: # Simulated config does not have this value at all.
                         continue
                     if current_value != simulated_value and simulated_value != required_value:
                         return False
@@ -1373,7 +1373,7 @@ class RequiredValueMoveExtender:
                 for required_path, required_value in data[path]:
                     current_value = self.identifier.get_value_or_default(current_config, required_path)
                     simulated_value = self.identifier.get_value_or_default(simulated_config, required_path)
-                    if simulated_value == None: # Simulated config does not have this value at all.
+                    if simulated_value is None: # Simulated config does not have this value at all.
                         continue
                     if current_value != simulated_value and simulated_value != required_value:
                         flip_path_value_tuples.add((required_path, required_value))
