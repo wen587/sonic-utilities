@@ -544,6 +544,66 @@ class RequiredValueIdentifier:
 
         return None
 
+class LaneReplacementMoveValidator:
+    def __init__(self, path_addressing):
+        self.path_addressing = path_addressing
+
+    def validate(self, move, diff):
+        current_config = diff.current_config
+        target_config = diff.target_config # Final config after applying whole patch
+
+        if "PORT" not in current_config:
+            return True
+
+        current_ports = current_config["PORT"]
+        if not current_ports:
+            return True
+
+        if "PORT" not in target_config:
+            return True
+
+        target_ports = target_config["PORT"]
+        if not target_ports:
+            return True
+
+        simulated_config = move.apply(current_config) # Config after applying just this move
+
+        for port_name in current_ports:
+            if port_name not in target_ports:
+                continue
+
+            if not self._validate_port(port_name, current_config, target_config, simulated_config):
+                return False
+
+        return True
+
+    def _validate_port(self, port_name, current_config, target_config, simulated_config):
+        current_lanes = self._get_lanes(current_config, port_name)
+        target_lanes = self._get_lanes(target_config, port_name)
+
+        if current_lanes == target_lanes:
+            return True
+
+        simulated_port = self.path_addressing.get_from_path(simulated_config, f"/PORT/{port_name}")
+
+        if simulated_port is None:
+            return True
+
+        current_admin_status = self.path_addressing.get_from_path(current_config, f"/PORT/{port_name}/admin_status")
+        simulated_admin_status = self.path_addressing.get_from_path(simulated_config, f"/PORT/{port_name}/admin_status")
+        if current_admin_status != simulated_admin_status and current_admin_status != "up":
+            return False
+
+        port_path = f"/PORT/{port_name}"
+        for ref_path in self.path_addressing.find_ref_paths(port_path, simulated_config):
+            if not self.path_addressing.has_path(current_config, ref_path):
+                return False
+
+        return True
+
+    def _get_lanes(self, config, port_name):
+        return config["PORT"][port_name].get("lanes", None)
+
 class DeleteWholeConfigMoveValidator:
     """
     A class to validate not deleting whole config as it is not supported by JsonPatch lib.
@@ -921,6 +981,8 @@ class RequiredValueMoveValidator:
                 for required_path, required_value in data[path]:
                     current_value = self.identifier.get_value_or_default(current_config, required_path)
                     simulated_value = self.identifier.get_value_or_default(simulated_config, required_path)
+                    if simulated_value is None: # Simulated config does not have this value at all.
+                        continue
                     if current_value != simulated_value and simulated_value != required_value:
                         return False
 
@@ -999,6 +1061,46 @@ class LowLevelMoveGenerator:
         single_run_generator = SingleRunLowLevelMoveGenerator(diff, self.path_addressing)
         for move in single_run_generator.generate():
             yield move
+
+class LaneReplacementMoveGenerator:
+    def __init__(self, path_addressing):
+        self.path_addressing = path_addressing
+
+    def generate(self, diff):
+        current_config = diff.current_config
+        target_config = diff.target_config # Final config after applying whole patch
+
+        if "PORT" not in current_config:
+            return
+
+        current_ports = current_config["PORT"]
+        if not current_ports:
+            return
+
+        if "PORT" not in target_config:
+            return
+
+        target_ports = target_config["PORT"]
+        if not target_ports:
+            return
+
+        for port_name in current_ports:
+            if port_name not in target_ports:
+                continue
+
+            current_lanes = self._get_lanes(current_config, port_name)
+            target_lanes = self._get_lanes(target_config, port_name)
+
+            if current_lanes == target_lanes:
+                continue
+
+            port_path = f"/PORT/{port_name}"
+
+            for ref_path in self.path_addressing.find_ref_paths(port_path, current_config):
+                yield JsonMove(diff, OperationType.REMOVE, self.path_addressing.get_path_tokens(ref_path))
+
+    def _get_lanes(self, config, port_name):
+        return config["PORT"][port_name].get("lanes", None)
 
 class SingleRunLowLevelMoveGenerator:
     """
@@ -1271,6 +1373,8 @@ class RequiredValueMoveExtender:
                 for required_path, required_value in data[path]:
                     current_value = self.identifier.get_value_or_default(current_config, required_path)
                     simulated_value = self.identifier.get_value_or_default(simulated_config, required_path)
+                    if simulated_value is None: # Simulated config does not have this value at all.
+                        continue
                     if current_value != simulated_value and simulated_value != required_value:
                         flip_path_value_tuples.add((required_path, required_value))
 
@@ -1473,7 +1577,8 @@ class SortAlgorithmFactory:
         self.path_addressing = path_addressing
 
     def create(self, algorithm=Algorithm.DFS):
-        move_generators = [LowLevelMoveGenerator(self.path_addressing)]
+        move_generators = [LaneReplacementMoveGenerator(self.path_addressing),
+                           LowLevelMoveGenerator(self.path_addressing)]
         # TODO: Enable TableLevelMoveGenerator once it is confirmed whole table can be updated at the same time
         move_non_extendable_generators = [KeyLevelMoveGenerator()]
         move_extenders = [RequiredValueMoveExtender(self.path_addressing, self.operation_wrapper),
@@ -1485,6 +1590,7 @@ class SortAlgorithmFactory:
                            NoDependencyMoveValidator(self.path_addressing, self.config_wrapper),
                            CreateOnlyMoveValidator(self.path_addressing),
                            RequiredValueMoveValidator(self.path_addressing),
+                           LaneReplacementMoveValidator(self.path_addressing),
                            NoEmptyTableMoveValidator(self.path_addressing)]
 
         move_wrapper = MoveWrapper(move_generators, move_non_extendable_generators, move_extenders, move_validators)
