@@ -1953,10 +1953,10 @@ class TestRequiredValueMoveValidator(unittest.TestCase):
     def _apply_operations(self, config, operations):
         return jsonpatch.JsonPatch(operations).apply(config)
 
-class TestLaneReplacementMoveValidator(unittest.TestCase):
+class RemoveCreateOnlyDependencyMoveValidator(unittest.TestCase):
     def setUp(self):
         path_addressing = PathAddressing(ConfigWrapper())
-        self.validator = ps.LaneReplacementMoveValidator(path_addressing)
+        self.validator = ps.RemoveCreateOnlyDependencyMoveValidator(path_addressing)
 
     def test_validate__lane_replacement_change(self):
         test_cases = self._get_lane_replacement_change_test_cases()
@@ -2429,11 +2429,11 @@ class TestLowLevelMoveGenerator(unittest.TestCase):
 
         return ps.Diff(current_config, target_config)
 
-class TestLaneReplacementMoveGenerator(unittest.TestCase):
+class RemoveCreateOnlyDependencyMoveGenerator(unittest.TestCase):
     def setUp(self):
         config_wrapper = ConfigWrapper()
         path_addressing = PathAddressing(config_wrapper)
-        self.generator = ps.LaneReplacementMoveGenerator(path_addressing)
+        self.generator = ps.RemoveCreateOnlyDependencyMoveGenerator(path_addressing)
 
     def test_generate__no_port_table__no_moves(self):
         current_config = {}
@@ -3236,7 +3236,7 @@ class TestSortAlgorithmFactory(unittest.TestCase):
         # Arrange
         config_wrapper = ConfigWrapper()
         factory = ps.SortAlgorithmFactory(OperationWrapper(), config_wrapper, PathAddressing(config_wrapper))
-        expected_generators = [ps.LaneReplacementMoveGenerator,
+        expected_generators = [ps.RemoveCreateOnlyDependencyMoveGenerator,
                                ps.LowLevelMoveGenerator]
         expected_non_extendable_generators = [ps.KeyLevelMoveGenerator]
         expected_extenders = [ps.RequiredValueMoveExtender,
@@ -3248,7 +3248,7 @@ class TestSortAlgorithmFactory(unittest.TestCase):
                               ps.NoDependencyMoveValidator,
                               ps.CreateOnlyMoveValidator,
                               ps.RequiredValueMoveValidator,
-                              ps.LaneReplacementMoveValidator,
+                              ps.RemoveCreateOnlyDependencyMoveValidator,
                               ps.NoEmptyTableMoveValidator]
 
         # Act
