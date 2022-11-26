@@ -588,38 +588,6 @@
             ],
             [
                 {
-                    "op": "add",
-                    "path": "/LOOPBACK_INTERFACE/Loopback0|10.1.0.32~132",
-                    "value": {}
-                }
-            ],
-            [
-                {
-                    "op": "remove",
-                    "path": "/LOOPBACK_INTERFACE/Loopback1|20.2.0.32~132"
-                }
-            ],
-            [
-                {
-                    "op": "add",
-                    "path": "/LOOPBACK_INTERFACE/Loopback0|1100:1::32~1128",
-                    "value": {}
-                }
-            ],
-            [
-                {
-                    "op": "remove",
-                    "path": "/LOOPBACK_INTERFACE/Loopback0|10.1.0.32~132"
-                }
-            ],
-            [
-                {
-                    "op": "remove",
-                    "path": "/LOOPBACK_INTERFACE/Loopback0|1100:1::32~1128"
-                }
-            ],
-            [
-                {
                     "op": "remove",
                     "path": "/LOOPBACK_INTERFACE/Loopback0"
                 }
@@ -644,13 +612,6 @@
                 {
                     "op": "add",
                     "path": "/LOOPBACK_INTERFACE/Loopback0|1100:1::32~1128",
-                    "value": {}
-                }
-            ],
-            [
-                {
-                    "op": "add",
-                    "path": "/LOOPBACK_INTERFACE/Loopback1|20.2.0.32~132",
                     "value": {}
                 }
             ]
@@ -2246,47 +2207,8 @@
             ],
             [
                 {
-                    "op": "add",
-                    "path": "/LOOPBACK_INTERFACE/Loopback1|20.2.0.32~132",
-                    "value": {}
-                }
-            ],
-            [
-                {
-                    "op": "remove",
-                    "path": "/LOOPBACK_INTERFACE/Loopback0|10.1.0.32~132"
-                }
-            ],
-            [
-                {
-                    "op": "add",
-                    "path": "/LOOPBACK_INTERFACE/Loopback1|2200:2::32~1128",
-                    "value": {}
-                }
-            ],
-            [
-                {
-                    "op": "remove",
-                    "path": "/LOOPBACK_INTERFACE/Loopback1|20.2.0.32~132"
-                }
-            ],
-            [
-                {
-                    "op": "remove",
-                    "path": "/LOOPBACK_INTERFACE/Loopback1|2200:2::32~1128"
-                }
-            ],
-            [
-                {
                     "op": "remove",
                     "path": "/LOOPBACK_INTERFACE/Loopback1"
-                }
-            ],
-            [
-                {
-                    "op": "add",
-                    "path": "/LOOPBACK_INTERFACE/Loopback0|10.1.0.32~132",
-                    "value": {}
                 }
             ],
             [

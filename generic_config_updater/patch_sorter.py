@@ -545,6 +545,9 @@ class RequiredValueIdentifier:
         return None
 
 class CreateOnlyFilter:
+    """
+    A filtering class for create-only fields.
+    """
     def __init__(self, path_addressing):
         # TODO: create-only fields are hard-coded for now, it should be moved to YANG model
         self.path_addressing = path_addressing
@@ -573,25 +576,28 @@ class CreateOnlyFilter:
         return JsonPointerFilter(self.patterns,
                                  self.path_addressing)
 
-class RemoveCreateOnlyDependencyFilter(CreateOnlyFilter):
-    def __init__(self, path_addressing):
-        super(RemoveCreateOnlyDependencyFilter, self).__init__(path_addressing)
-        self.patterns = [
-            ["PORT", "*", "lanes"],
-        ]
-
 class RemoveCreateOnlyDependencyMoveValidator:
+    """
+    A class to validate all dependencies of create-only fields have been removed before
+    modifying the create-only fields.
+    """
     def __init__(self, path_addressing):
         self.path_addressing = path_addressing
-        self.create_only_filter = RemoveCreateOnlyDependencyFilter(path_addressing).get_filter()
+        self.create_only_filter = CreateOnlyFilter(path_addressing).get_filter()
 
     def validate(self, move, diff):
         current_config = diff.current_config
         target_config = diff.target_config # Final config after applying whole patch
 
+        processed_tables = set()
         for path in self.create_only_filter.get_paths(current_config):
             tokens = self.path_addressing.get_path_tokens(path)
             table_to_check = tokens[0]
+
+            if table_to_check in processed_tables:
+                continue
+            else:
+                processed_tables.add(table_to_check)
 
             if table_to_check not in current_config:
                 continue
@@ -1096,9 +1102,12 @@ class LowLevelMoveGenerator:
             yield move
 
 class RemoveCreateOnlyDependencyMoveGenerator:
+    """
+    A class to generate the create-only fields' dependency removing moves
+    """
     def __init__(self, path_addressing):
         self.path_addressing = path_addressing
-        self.create_only_filter = RemoveCreateOnlyDependencyFilter(path_addressing).get_filter()
+        self.create_only_filter = CreateOnlyFilter(path_addressing).get_filter()
 
     def generate(self, diff):
         current_config = diff.current_config
