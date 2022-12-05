@@ -1386,7 +1386,7 @@ def all(verbose):
     cmd = "sonic-cfggen -d --print-data"
     output = json.loads(run_command(cmd, display_cmd=verbose, return_cmd=True))
     if not multi_asic.is_multi_asic():
-        bgpraw_cmd = "vtysh -c 'show running-config'"
+        bgpraw_cmd = "sudo {} -c 'show running-config'".format(constants.RVTYSH_COMMAND)
         bgpraw = run_command(bgpraw_cmd, display_cmd=verbose, return_cmd=True)
         output['bgpraw'] = bgpraw
     click.echo(json.dumps(output, indent=4))
