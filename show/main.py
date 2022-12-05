@@ -1384,7 +1384,11 @@ def runningconfiguration():
 def all(verbose):
     """Show full running configuration"""
     cmd = "sonic-cfggen -d --print-data"
-    run_command(cmd, display_cmd=verbose)
+    output = json.loads(run_command(cmd, display_cmd=verbose, return_cmd=True))
+    bgpraw_cmd = "vtysh -c 'show running-config'"
+    bgpraw = run_command(bgpraw_cmd, display_cmd=verbose, return_cmd=True)
+    output['bgpraw'] = bgpraw
+    click.echo(json.dumps(output, indent=4))
 
 
 # 'acl' subcommand ("show runningconfiguration acl")
