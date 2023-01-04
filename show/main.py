@@ -129,6 +129,14 @@ def run_command(command, display_cmd=False, return_cmd=False):
     if rc != 0:
         sys.exit(rc)
 
+def get_cmd_output(cmd):
+    proc = subprocess.Popen(cmd, shell=True, text=True, stdout=subprocess.PIPE)
+    stdout, stderr = proc.communicate()
+    if proc.returncode != 0:
+        click.echo("Command failed '{}': {}".format(cmd, stderr))
+        raise click.Abort()
+    return stdout
+
 # Lazy global class instance for SONiC interface name to alias conversion
 iface_alias_converter = lazy_object_proxy.Proxy(lambda: clicommon.InterfaceAliasConverter())
 
@@ -1384,10 +1392,17 @@ def runningconfiguration():
 def all(verbose):
     """Show full running configuration"""
     cmd = "sonic-cfggen -d --print-data"
-    output = json.loads(run_command(cmd, display_cmd=verbose, return_cmd=True))
+    stdout = get_cmd_output(cmd)
+
+    try:
+        output = json.loads(stdout)
+    except Exception as e:
+        click.echo("Failed to load output '{}':{}".format(cmd, e))
+        raise click.Abort()
+
     if 'bgpraw' in output or not multi_asic.is_multi_asic():
-        bgpraw_cmd = "sudo {} -c 'show running-config'".format(constants.RVTYSH_COMMAND)
-        bgpraw = run_command(bgpraw_cmd, display_cmd=verbose, return_cmd=True)
+        bgpraw_cmd = "{} -c 'show running-config'".format(constants.RVTYSH_COMMAND)
+        bgpraw = get_cmd_output(bgpraw_cmd)
         output['bgpraw'] = bgpraw
     click.echo(json.dumps(output, indent=4))
 
