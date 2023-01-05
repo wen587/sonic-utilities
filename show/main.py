@@ -130,7 +130,7 @@ def run_command(command, display_cmd=False, return_cmd=False):
         sys.exit(rc)
 
 def get_cmd_output(cmd):
-    proc = subprocess.Popen(cmd, shell=True, text=True, stdout=subprocess.PIPE)
+    proc = subprocess.Popen(cmd, text=True, stdout=subprocess.PIPE)
     stdout, stderr = proc.communicate()
     if proc.returncode != 0:
         click.echo("Command failed '{}': {}".format(cmd, stderr))
@@ -1391,7 +1391,7 @@ def runningconfiguration():
 @click.option('--verbose', is_flag=True, help="Enable verbose output")
 def all(verbose):
     """Show full running configuration"""
-    cmd = "sonic-cfggen -d --print-data"
+    cmd = ['sonic-cfggen', '-d', '--print-data']
     stdout = get_cmd_output(cmd)
 
     try:
@@ -1401,7 +1401,7 @@ def all(verbose):
         raise click.Abort()
 
     if 'bgpraw' in output or not multi_asic.is_multi_asic():
-        bgpraw_cmd = "{} -c 'show running-config'".format(constants.RVTYSH_COMMAND)
+        bgpraw_cmd = [constants.RVTYSH_COMMAND, '-c', 'show running-config']
         bgpraw = get_cmd_output(bgpraw_cmd)
         output['bgpraw'] = bgpraw
     click.echo(json.dumps(output, indent=4))

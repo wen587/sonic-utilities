@@ -56,8 +56,8 @@ class TestShowRunAllCommands(object):
             result = CliRunner().invoke(show.cli.commands['runningconfiguration'].commands['all'], [])
         assert mock_get_cmd_output.call_count == 2
         assert mock_get_cmd_output.call_args_list == [
-            call('sonic-cfggen -d --print-data'),
-            call("rvtysh -c 'show running-config'")]
+            call(['sonic-cfggen', '-d', '--print-data']),
+            call(['rvtysh', '-c', 'show running-config'])]
 
     @classmethod
     def teardown_class(cls):
