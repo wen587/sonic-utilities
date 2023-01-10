@@ -19,6 +19,7 @@ from utilities_common.db import Db
 from datetime import datetime
 import utilities_common.constants as constants
 from utilities_common.general import load_db_config
+from json.decoder import JSONDecodeError
 
 # mock the redis for unit test purposes #
 try:
@@ -131,11 +132,7 @@ def run_command(command, display_cmd=False, return_cmd=False):
 
 def get_cmd_output(cmd):
     proc = subprocess.Popen(cmd, text=True, stdout=subprocess.PIPE)
-    stdout, stderr = proc.communicate()
-    if proc.returncode != 0:
-        click.echo("Command failed '{}': {}".format(cmd, stderr))
-        raise click.Abort()
-    return stdout
+    return proc.communicate()[0]
 
 # Lazy global class instance for SONiC interface name to alias conversion
 iface_alias_converter = lazy_object_proxy.Proxy(lambda: clicommon.InterfaceAliasConverter())
@@ -1396,7 +1393,7 @@ def all(verbose):
 
     try:
         output = json.loads(stdout)
-    except Exception as e:
+    except JSONDecodeError as e:
         click.echo("Failed to load output '{}':{}".format(cmd, e))
         raise click.Abort()
 

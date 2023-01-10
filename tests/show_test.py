@@ -10,29 +10,6 @@ modules_path = os.path.dirname(test_path)
 sys.path.insert(0, test_path)
 sys.path.insert(0, modules_path)
 
-class TestCommonFunc(object):
-    @classmethod
-    def setup_class(cls):
-        print("SETUP")
-        os.environ["UTILITIES_UNIT_TESTING"] = "1"
-
-    def test_get_cmd_output(self):
-        with mock.patch('show.main.subprocess.Popen',
-                mock.MagicMock()) as mock_popen:
-            mock_proc = MagicMock()
-            mock_proc.communicate = MagicMock(return_value=(None, None))
-            mock_proc.returncode = 1
-            mock_popen.return_value = mock_proc
-            result = CliRunner().invoke(show.cli.commands['runningconfiguration'].commands['all'], [])
-        assert result.exit_code != 0
-        assert "Aborted" in result.output
-
-    @classmethod
-    def teardown_class(cls):
-        print("TEARDOWN")
-        os.environ["PATH"] = os.pathsep.join(os.environ["PATH"].split(os.pathsep)[:-1])
-        os.environ["UTILITIES_UNIT_TESTING"] = "0"
-
 
 class TestShowRunAllCommands(object):
     @classmethod
