@@ -15,7 +15,7 @@ from time import sleep as tsleep
 
 import sonic_yang
 from jsondiff import diff
-from sonic_py_common import port_util, multi_asic
+from sonic_py_common import port_util
 from swsscommon.swsscommon import SonicV2Connector, ConfigDBConnector
 from utilities_common.general import load_module_from_source
 
@@ -36,7 +36,7 @@ class ConfigMgmt():
     '''
 
     def __init__(self, source="configDB", debug=False, allowTablesWithoutYang=True,
-                 sonicYangOptions=0, namespace=multi_asic.DEFAULT_NAMESPACE):
+                 sonicYangOptions=0, configdb=None):
         '''
         Initialise the class, --read the config, --load in data tree.
 
@@ -45,7 +45,8 @@ class ConfigMgmt():
             debug (bool): verbose mode.
             allowTablesWithoutYang (bool): allow tables without yang model in
                 config or not.
-            namespace(str): namespace to work on.
+            configdb: configdb to work on.
+
         Returns:
             void
         '''
@@ -55,13 +56,17 @@ class ConfigMgmt():
             self.source = source
             self.allowTablesWithoutYang = allowTablesWithoutYang
             self.sonicYangOptions = sonicYangOptions
-            self.namespace = namespace
+            if configdb is None:
+                self.configdb = ConfigDBConnector()
+                self.configdb.connect()
+            else:
+                self.configdb = configdb
 
             # logging vars
             self.SYSLOG_IDENTIFIER = "ConfigMgmt"
             self.DEBUG = debug
 
-            self.__init_sonic_yang(namespace=self.namespace)
+            self.__init_sonic_yang()
 
         except Exception as e:
             self.sysLog(doPrint=True, logLevel=syslog.LOG_ERR, msg=str(e))
@@ -69,13 +74,13 @@ class ConfigMgmt():
 
         return
 
-    def __init_sonic_yang(self, namespace=multi_asic.DEFAULT_NAMESPACE):
+    def __init_sonic_yang(self):
         self.sy = sonic_yang.SonicYang(YANG_DIR, debug=self.DEBUG, sonic_yang_options=self.sonicYangOptions)
         # load yang models
         self.sy.loadYangModel()
         # load jIn from config DB or from config DB json file.
         if self.source.lower() == 'configdb':
-            self.readConfigDB(namespace)
+            self.readConfigDB()
         # treat any other source as file input
         else:
             self.readConfigDBJson(self.source)
@@ -183,12 +188,12 @@ class ConfigMgmt():
     """
         Get config from redis config DB
     """
-    def readConfigDB(self, namespace=multi_asic.DEFAULT_NAMESPACE):
+    def readConfigDB(self):
         '''
         Read the config in Config DB. Assign it in self.configdbJsonIn.
 
         Parameters:
-            namespace: namespace to work on.
+            (void)
 
         Returns:
             (void)
@@ -196,32 +201,29 @@ class ConfigMgmt():
         self.sysLog(doPrint=True, msg='Reading data from Redis configDb')
         # Read from config DB on sonic switch
         data = dict()
-        configdb = ConfigDBConnector(namespace=namespace)
-        configdb.connect()
+        configdb = self.configdb
         sonic_cfggen.deep_update(data, sonic_cfggen.FormatConverter.db_to_output(configdb.get_config()))
         self.configdbJsonIn = sonic_cfggen.FormatConverter.to_serialized(data)
-        self.sysLog(syslog.LOG_DEBUG, 'Reading Input from ConfigDB {} {}'.\
-            format(namespace, self.configdbJsonIn))
+        self.sysLog(syslog.LOG_DEBUG, 'Reading Input from ConfigDB {}'.\
+            format(self.configdbJsonIn))
 
         return
 
-    def writeConfigDB(self, jDiff, namespace=multi_asic.DEFAULT_NAMESPACE):
+    def writeConfigDB(self, jDiff):
         '''
         Write the diff in Config DB.
 
         Parameters:
             jDiff (dict): config to push in config DB.
-            namespace (str): namespace to work on.
 
         Returns:
             void
         '''
         self.sysLog(doPrint=True, msg='Writing in Config DB')
         data = dict()
-        configdb = ConfigDBConnector(namespace=namespace)
-        configdb.connect(False)
+        configdb = self.configdb
         sonic_cfggen.deep_update(data, sonic_cfggen.FormatConverter.to_deserialized(jDiff))
-        self.sysLog(msg="Write in DB {}: {}".format(namespace, data))
+        self.sysLog(msg="Write in DB: {}".format(data))
         configdb.mod_config(sonic_cfggen.FormatConverter.output_to_db(data))
 
         return

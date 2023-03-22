@@ -174,7 +174,7 @@ class TestConfigOverride(object):
         def is_yang_config_validation_enabled_side_effect(filename):
             return True
 
-        def config_mgmt_side_effect(namespace):
+        def config_mgmt_side_effect(configdb):
             return config_mgmt.ConfigMgmt(source=CONFIG_DB_JSON_FILE)
 
         db = Db()
@@ -233,7 +233,7 @@ class TestConfigOverride(object):
         def read_json_file_side_effect(filename):
             return golden_config
 
-        def config_mgmt_side_effect(namespace):
+        def config_mgmt_side_effect(configdb):
             return config_mgmt.ConfigMgmt(source=CONFIG_DB_JSON_FILE)
 
         # ConfigMgmt will call ConfigDBConnector to load default config_db.json.

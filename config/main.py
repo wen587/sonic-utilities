@@ -1921,7 +1921,7 @@ def override_config_table(db, input_config_db, dry_run):
             # The ConfigMgmt will load YANG and running
             # config during initialization.
             try:
-                cm = ConfigMgmt(namespace=ns)
+                cm = ConfigMgmt(configdb=config_db)
                 cm.validateConfigData()
             except Exception as ex:
                 click.secho("Failed to validate running config. Error: {}".format(ex), fg="magenta")
