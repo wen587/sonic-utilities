@@ -1560,6 +1560,17 @@ def reload(db, filename, yes, load_sysinfo, no_service_restart, force, file_form
             click.echo("The config file {} doesn't exist".format(file))
             continue
 
+        if file_format == 'config_db':
+            file_input = read_json_file(file)
+
+            platform = file_input.get("DEVICE_METADATA", {}).\
+                get("localhost", {}).get("platform", {})
+            mac = file_input.get("DEVICE_METADATA", {}).\
+                get("localhost", {}).get("mac", {})
+
+            if not platform or not mac:
+                load_sysinfo = True
+
         if load_sysinfo:
             try:
                 command = "{} -j {} -v DEVICE_METADATA.localhost.hwsku".format(SONIC_CFGGEN_PATH, file)
