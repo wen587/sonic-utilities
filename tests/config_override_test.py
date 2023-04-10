@@ -21,6 +21,8 @@ EMPTY_TABLE_REMOVAL = os.path.join(DATA_DIR, "empty_table_removal.json")
 RUNNING_CONFIG_YANG_FAILURE = os.path.join(DATA_DIR, "running_config_yang_failure.json")
 GOLDEN_INPUT_YANG_FAILURE = os.path.join(DATA_DIR, "golden_input_yang_failure.json")
 FINAL_CONFIG_YANG_FAILURE = os.path.join(DATA_DIR, "final_config_yang_failure.json")
+MULTI_ASIC_MACSEC_OV = os.path.join(DATA_DIR, "multi_asic_macsec_ov.json")
+MULTI_ASIC_DEVICE_METADATA_RM = os.path.join(DATA_DIR, "multi_asic_dm_rm.json")
 
 # Load sonic-cfggen from source since /usr/local/bin/sonic-cfggen does not have .py extension.
 sonic_cfggen = load_module_from_source('sonic_cfggen', '/usr/local/bin/sonic-cfggen')
@@ -275,15 +277,15 @@ class TestConfigOverrideMultiasic(object):
 
     def test_macsec_override(self):
         def read_json_file_side_effect(filename):
+            with open(MULTI_ASIC_MACSEC_OV, "r") as f:
+                macsec_profile = json.load(f)
             return macsec_profile
         db = Db()
         cfgdb_clients = db.cfgdb_clients
-        macsec_profile = {}
-        profile_content = {"profile": {"key": "value"}}
 
-        for ns, config_db in cfgdb_clients.items():
-            macsec_profile[ns] = {}
-            macsec_profile[ns]['MACSEC_PROFILE'] = profile_content
+        # The profile_content was copied from MULTI_ASIC_MACSEC_OV, where all
+        # ns sharing the same content: {"profile": {"key": "value"}}
+        profile_content = {"profile": {"key": "value"}}
 
         with mock.patch('config.main.read_json_file',
                         mock.MagicMock(side_effect=read_json_file_side_effect)):
@@ -297,15 +299,14 @@ class TestConfigOverrideMultiasic(object):
 
     def test_device_metadata_table_rm(self):
         def read_json_file_side_effect(filename):
+            with open(MULTI_ASIC_DEVICE_METADATA_RM, "r") as f:
+                device_metadata = json.load(f)
             return device_metadata
         db = Db()
         cfgdb_clients = db.cfgdb_clients
-        device_metadata = {}
 
         for ns, config_db in cfgdb_clients.items():
             assert 'DEVICE_METADATA' in config_db.get_config()
-            device_metadata[ns] = {}
-            device_metadata[ns]['DEVICE_METADATA'] = {}
 
         with mock.patch('config.main.read_json_file',
                         mock.MagicMock(side_effect=read_json_file_side_effect)):
