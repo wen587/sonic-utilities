@@ -1,5 +1,4 @@
 {
-    
     "": {
         "MACSEC_PROFILE": {
             "profile": {
@@ -15,13 +14,6 @@
         }
     },
     "asic1": {
-        "MACSEC_PROFILE": {
-            "profile": {
-                "key": "value"
-            }
-        }
-    },
-    "asic2": {
         "MACSEC_PROFILE": {
             "profile": {
                 "key": "value"

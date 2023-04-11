@@ -1,5 +1,4 @@
 {
-    
     "": {
         "DEVICE_METADATA": {}
     },
@@ -7,9 +6,6 @@
         "DEVICE_METADATA": {}
     },
     "asic1": {
-        "DEVICE_METADATA": {}
-    },
-    "asic2": {
         "DEVICE_METADATA": {}
     }
 }
