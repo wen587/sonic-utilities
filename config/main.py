@@ -1565,11 +1565,13 @@ def reload(db, filename, yes, load_sysinfo, no_service_restart, force, file_form
             file_input = read_json_file(file)
 
             platform = file_input.get("DEVICE_METADATA", {}).\
-                get("localhost", {}).get("platform", {})
+                get("localhost", {}).get("platform")
             mac = file_input.get("DEVICE_METADATA", {}).\
-                get("localhost", {}).get("mac", {})
+                get("localhost", {}).get("mac")
 
             if not platform or not mac:
+                log.log_warning("Input file does't have platform or mac. platform: {}, mac: {}"
+                    .format(None if platform is None else platform, None if mac is None else mac))
                 load_sysinfo = True
 
         if load_sysinfo:
