@@ -457,7 +457,7 @@ class TestReloadConfig(object):
             }
             f.write(json.dumps(device_metadata))
 
-    def test_reload_config_no_sysinfo(self, get_cmd_module, setup_single_broadcom_asic):
+    def test_reload_config_invalid_input(self, get_cmd_module, setup_single_broadcom_asic):
         open(self.dummy_cfg_file, 'w').close()
         with mock.patch(
                 "utilities_common.cli.run_command",
@@ -474,6 +474,33 @@ class TestReloadConfig(object):
             print(result.output)
             traceback.print_tb(result.exc_info[2])
             assert result.exit_code != 0
+
+    def test_reload_config_no_sysinfo(self, get_cmd_module, setup_single_broadcom_asic):
+        with open(self.dummy_cfg_file, 'w') as f:
+            device_metadata = {
+                "DEVICE_METADATA": {
+                    "localhost": {
+                        "hwsku": "some_hwsku"
+                    }
+                }
+            }
+            f.write(json.dumps(device_metadata))
+
+        with mock.patch(
+                "utilities_common.cli.run_command",
+                mock.MagicMock(side_effect=mock_run_command_side_effect)
+        ) as mock_run_command:
+            (config, show) = get_cmd_module
+            runner = CliRunner()
+
+            result = runner.invoke(
+                config.config.commands["reload"],
+                [self.dummy_cfg_file, '-y', '-f'])
+
+            print(result.exit_code)
+            print(result.output)
+            traceback.print_tb(result.exc_info[2])
+            assert result.exit_code == 0
 
     def test_reload_config(self, get_cmd_module, setup_single_broadcom_asic):
         self.add_sysinfo_to_cfg_file()
