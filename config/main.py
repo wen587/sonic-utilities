@@ -1875,33 +1875,6 @@ def override_config_by(golden_config_path):
     return
 
 
-def generate_sysinfo(config_input, ns=None):
-    # Generate required sysinfo for Golden Config.
-    device_metadata = config_input.get('DEVICE_METADATA')
-
-    if not device_metadata or 'localhost' not in device_metadata:
-        return
-
-    if ns:
-        asic_role = device_metadata.get('localhost', {}).get('sub_role')
-        switch_type = device_metadata.get('localhost', {}).get('switch_type')
-
-        if ((switch_type is not None and switch_type.lower() == "chassis-packet") or
-                (asic_role is not None and asic_role.lower() == "backend")):
-            mac = device_info.get_system_mac(namespace=ns)
-        else:
-            mac = device_info.get_system_mac()
-    else:
-        mac = device_info.get_system_mac()
-
-    platform = device_info.get_platform()
-
-    device_metadata['localhost']['mac'] = mac
-    device_metadata['localhost']['platform'] = platform
-
-    return
-
-
 #
 # 'override-config-table' command ('config override-config-table ...')
 #
@@ -1939,10 +1912,8 @@ def override_config_table(db, input_config_db, dry_run):
 
         if multi_asic.is_multi_asic():
             ns_config_input = config_input[ns]
-            generate_sysinfo(ns_config_input, ns)
         else:
             ns_config_input = config_input
-            generate_sysinfo(ns_config_input)
         updated_config = update_config(current_config, ns_config_input)
 
         yang_enabled = device_info.is_yang_config_validation_enabled(config_db)
