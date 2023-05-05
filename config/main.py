@@ -1858,7 +1858,11 @@ def override_config_table(db, input_config_db, dry_run):
         sonic_cfggen.FormatConverter.to_serialized(current_config)
 
         if multi_asic.is_multi_asic():
-            ns_config_input = config_input[ns]
+            # Golden Config will use "localhost" to represent host name
+            if ns == DEFAULT_NAMESPACE:
+                ns_config_input = config_input["localhost"]
+            else:
+                ns_config_input = config_input[ns]
         else:
             ns_config_input = config_input
         updated_config = update_config(current_config, ns_config_input)
