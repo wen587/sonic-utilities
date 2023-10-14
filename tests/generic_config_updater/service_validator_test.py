@@ -6,7 +6,7 @@ import unittest
 from collections import defaultdict
 from unittest.mock import patch
 
-from generic_config_updater.services_validator import vlan_validator, caclmgrd_validator, vlanintf_validator
+from generic_config_updater.services_validator import vlan_validator, rsyslog_validator, caclmgrd_validator, vlanintf_validator
 import generic_config_updater.gu_common
 
 
@@ -142,6 +142,38 @@ test_caclrule = [
         },
     ]
 
+test_rsyslog_data = [
+        { "old": {}, "upd": {}, "cmd": "" },
+        {
+            "old": { "SYSLOG_SERVER": {
+                "2.2.2.2": {} } },
+            "upd": { "SYSLOG_SERVER": {
+                "2.2.2.2": {} } },
+            "cmd": ""
+        },
+        {
+            "old": { "SYSLOG_SERVER": {
+                "2.2.2.2": {} } },
+            "upd": { "SYSLOG_SERVER": {
+                "1.1.1.1": {} } },
+            "cmd": "systemctl reset-failed rsyslog-config rsyslog,systemctl restart rsyslog-config"
+        },
+        {
+            "old": { "SYSLOG_SERVER": {
+                "2.2.2.2": {} } },
+            "upd": { "SYSLOG_SERVER": {
+                "1.1.1.1": {},
+                "2.2.2.2": {} } },
+            "cmd": "systemctl reset-failed rsyslog-config rsyslog,systemctl restart rsyslog-config"
+        },
+        {
+            "old": { "SYSLOG_SERVER": {
+                "2.2.2.2": {} } },
+            "upd": {},
+            "cmd": "systemctl reset-failed rsyslog-config rsyslog,systemctl restart rsyslog-config"
+        }
+    ]
+
 test_vlanintf_data = [
         { "old": {}, "upd": {}, "cmd": "" },
         {
@@ -198,9 +230,17 @@ class TestServiceValidator(unittest.TestCase):
             vlan_validator(entry["old"], entry["upd"], None)
 
 
+        os_system_calls = []
+        os_system_call_index = 0
+        for entry in test_rsyslog_data:
+            if entry["cmd"]:
+                for c in entry["cmd"].split(","):
+                    os_system_calls.append({"cmd": c, "rc": 0})
+            msg = "case failed: {}".format(str(entry))
 
-        # Test failure case
-        #
+            rsyslog_validator(entry["old"], entry["upd"], None)
+
+
         os_system_calls = []
         os_system_call_index = 0
         for entry in test_vlanintf_data:
