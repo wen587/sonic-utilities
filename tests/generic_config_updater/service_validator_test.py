@@ -144,31 +144,67 @@ test_caclrule = [
 
 test_rsyslog_data = [
         { "old": {}, "upd": {}, "cmd": "" },
-        {
+        {# Same config but in different order
             "old": { "SYSLOG_SERVER": {
-                "2.2.2.2": {} } },
+                "10.13.14.17": {
+                    "source": "1.1.1.1",
+                    "port": "514"
+                },
+                "2001:aa:aa::aa": {
+                    "source": "1111::1111",
+                    "port": "514"
+                } } },
             "upd": { "SYSLOG_SERVER": {
-                "2.2.2.2": {} } },
+                "2001:aa:aa::aa": {
+                    "port": "514",
+                    "source": "1111::1111"
+                },
+                "10.13.14.17": {
+                    "port": "514",
+                    "source": "1.1.1.1"
+                } } },
             "cmd": ""
         },
-        {
+        {# Change port of one syslog server
             "old": { "SYSLOG_SERVER": {
-                "2.2.2.2": {} } },
+                "10.13.14.17": {
+                    "source": "1.1.1.1",
+                    "port": "514"
+                },
+                "2001:aa:aa::aa": {
+                    "source": "1111::1111",
+                    "port": "514"
+                } } },
             "upd": { "SYSLOG_SERVER": {
-                "1.1.1.1": {} } },
+                "2001:aa:aa::aa": {
+                    "port": "514",
+                    "source": "1111::1111"
+                },
+                "10.13.14.17": {
+                    "port": "513",
+                    "source": "1.1.1.1"
+                } } },
             "cmd": "systemctl reset-failed rsyslog-config rsyslog,systemctl restart rsyslog-config"
         },
-        {
+
+        {# Different syslog server
             "old": { "SYSLOG_SERVER": {
-                "2.2.2.2": {} } },
+                "10.13.14.17": {} } },
             "upd": { "SYSLOG_SERVER": {
-                "1.1.1.1": {},
-                "2.2.2.2": {} } },
+                "2001:aa:aa::aa": {} } },
             "cmd": "systemctl reset-failed rsyslog-config rsyslog,systemctl restart rsyslog-config"
         },
-        {
+        {# Add syslog server
             "old": { "SYSLOG_SERVER": {
-                "2.2.2.2": {} } },
+                "10.13.14.17": {} } },
+            "upd": { "SYSLOG_SERVER": {
+                "10.13.14.17": {},
+                "2001:aa:aa::aa": {} } },
+            "cmd": "systemctl reset-failed rsyslog-config rsyslog,systemctl restart rsyslog-config"
+        },
+        {# Remove syslog server
+            "old": { "SYSLOG_SERVER": {
+                "10.13.14.17": {} } },
             "upd": {},
             "cmd": "systemctl reset-failed rsyslog-config rsyslog,systemctl restart rsyslog-config"
         }
