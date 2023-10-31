@@ -147,8 +147,7 @@ def read_json_file(fileName):
 def write_json_file(json_input, fileName):
     try:
         with open(fileName, 'w') as f:
-            json.dump(json_input, fileName)
-            result = json.load(f)
+            json.dump(json_input, f, indent=4)
     except FileNotFoundError:
         click.echo("{}".format(str(e)), err=True)
         raise click.Abort()
@@ -1538,12 +1537,13 @@ def reload(db, filename, yes, load_sysinfo, no_service_restart, force, file_form
 
         # Get the file from user input, else take the default file /etc/sonic/config_db{NS_id}.json
         if cfg_files:
-            # Save to tmpfile in case of stdin input which can only be read once
             file = cfg_files[inst+1]
-            file_input = read_json_file(file)
-            (_, tmpfname) = tempfile.mkstemp(dir="/tmp", suffix="_configReload")
-            write_json_file(file_input, tmpfname)
-            file = tmpfname
+            # Save to tmpfile in case of stdin input which can only be read once
+            if file.endswith("stdin"):
+                file_input = read_json_file(file)
+                (_, tmpfname) = tempfile.mkstemp(dir="/tmp", suffix="_configReloadStdin")
+                write_json_file(file_input, tmpfname)
+                file = tmpfname
         else:
             if file_format == 'config_db':
                 if namespace is None:
@@ -1630,7 +1630,7 @@ def reload(db, filename, yes, load_sysinfo, no_service_restart, force, file_form
         clicommon.run_command(command, display_cmd=True)
         client.set(config_db.INIT_INDICATOR, 1)
 
-        if os.path.exists(file) and file.endswith("_configReload"):
+        if os.path.exists(file) and file.endswith("_configReloadStdin"):
             # Remove tmpfile
             try:
                 os.remove(file)
