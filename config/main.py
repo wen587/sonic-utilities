@@ -148,12 +148,8 @@ def write_json_file(json_input, fileName):
     try:
         with open(fileName, 'w') as f:
             json.dump(json_input, f, indent=4)
-    except FileNotFoundError:
-        click.echo("{}".format(str(e)), err=True)
-        raise click.Abort()
     except Exception as e:
-        click.echo("{}\n{}".format(type(e), str(e)), err=True)
-        raise click.Abort()
+        raise Exception(str(e))
 
 def _get_breakout_options(ctx, args, incomplete):
     """ Provides dynamic mode option as per user argument i.e. interface name """
