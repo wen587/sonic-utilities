@@ -263,17 +263,29 @@ class TestConfigReload(object):
             assert "\n".join([l.rstrip() for l in result.output.split('\n')][:1]) == reload_config_with_sys_info_command_output
 
     def test_config_reload_stdin(self, get_cmd_module, setup_single_broadcom_asic):
-        with mock.patch("utilities_common.cli.run_command", mock.MagicMock(side_effect=mock_run_command_side_effect)) as mock_run_command:
+        def mock_json_load(f):
+            device_metadata = {
+                "DEVICE_METADATA": {
+                    "localhost": {
+                        "docker_routing_config_mode": "split",
+                        "hostname": "sonic",
+                        "hwsku": "Seastone-DX010-25-50",
+                        "mac": "00:e0:ec:89:6e:48",
+                        "platform": "x86_64-cel_seastone-r0",
+                        "type": "ToRRouter"
+                    }
+                }
+            }
+            return device_metadata
+        with mock.patch("utilities_common.cli.run_command", mock.MagicMock(side_effect=mock_run_command_side_effect)) as mock_run_command,\
+                mock.patch("json.load", mock.MagicMock(side_effect=mock_json_load)):
             (config, show) = get_cmd_module
 
-            dev_stdin = os.path.join(mock_db_path, "dev_stdin")
-            jsonfile_config = os.path.join(mock_db_path, "config_db.json")
+            dev_stdin = "/dev/stdin"
             jsonfile_init_cfg = os.path.join(mock_db_path, "init_cfg.json")
-            shutil.copy(jsonfile_config, dev_stdin)
 
             # create object
             config.INIT_CFG_FILE = jsonfile_init_cfg
-            config.DEFAULT_CONFIG_DB_FILE =  dev_stdin
 
             db = Db()
             runner = CliRunner()

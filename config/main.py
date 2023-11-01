@@ -1535,7 +1535,7 @@ def reload(db, filename, yes, load_sysinfo, no_service_restart, force, file_form
         if cfg_files:
             file = cfg_files[inst+1]
             # Save to tmpfile in case of stdin input which can only be read once
-            if file.endswith("stdin"):
+            if file == "/dev/stdin":
                 file_input = read_json_file(file)
                 (_, tmpfname) = tempfile.mkstemp(dir="/tmp", suffix="_configReloadStdin")
                 write_json_file(file_input, tmpfname)
