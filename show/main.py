@@ -142,6 +142,24 @@ def get_cmd_output(cmd):
     proc = subprocess.Popen(cmd, text=True, stdout=subprocess.PIPE)
     return proc.communicate()[0], proc.returncode
 
+def get_config_json_by_namespace(namespace):
+    cmd = ['sonic-cfggen', '-d', '--print-data']
+    if namespace is not None and namespace != multi_asic.DEFAULT_NAMESPACE:
+        cmd += ['-n', namespace]
+
+    stdout, rc = get_cmd_output(cmd)
+    if rc:
+        click.echo("Failed to get cmd output '{}':rc {}".format(cmd, rc))
+        raise click.Abort()
+
+    try:
+        config_json = json.loads(stdout)
+    except JSONDecodeError as e:
+        click.echo("Failed to load output '{}':{}".format(cmd, e))
+        raise click.Abort()
+
+    return config_json
+
 # Lazy global class instance for SONiC interface name to alias conversion
 iface_alias_converter = lazy_object_proxy.Proxy(lambda: clicommon.InterfaceAliasConverter())
 
@@ -1407,24 +1425,24 @@ def runningconfiguration():
 @click.option('--verbose', is_flag=True, help="Enable verbose output")
 def all(verbose):
     """Show full running configuration"""
-    cmd = ['sonic-cfggen', '-d', '--print-data']
-    stdout, rc = get_cmd_output(cmd)
-    if rc:
-        click.echo("Failed to get cmd output '{}':rc {}".format(cmd, rc))
-        raise click.Abort()
 
-    try:
-        output = json.loads(stdout)
-    except JSONDecodeError as e:
-        click.echo("Failed to load output '{}':{}".format(cmd, e))
-        raise click.Abort()
+    if multi_asic.is_multi_asic():
+        output = {}
+        # In multiaisc, the namespace is changed to localhost by design
+        output['localhost'] = get_config_json_by_namespace(multi_asic.DEFAULT_NAMESPACE)
 
-    if not multi_asic.is_multi_asic():
+        ns_list = multi_asic.get_namespace_list()
+        for ns in ns_list:
+            output[ns] = get_config_json_by_namespace(ns)
+    else:
+        output = get_config_json_by_namespace(None)
+
         bgpraw_cmd = [constants.RVTYSH_COMMAND, '-c', 'show running-config']
         bgpraw, rc = get_cmd_output(bgpraw_cmd)
         if rc:
             bgpraw = ""
         output['bgpraw'] = bgpraw
+
     click.echo(json.dumps(output, indent=4))
 
 

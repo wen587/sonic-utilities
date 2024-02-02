@@ -2,6 +2,7 @@ import os
 import sys
 import click
 import pytest
+import importlib
 import subprocess
 import show.main as show
 from unittest import mock
@@ -65,6 +66,43 @@ class TestShowRunAllCommands(object):
         print("TEARDOWN")
         os.environ["PATH"] = os.pathsep.join(os.environ["PATH"].split(os.pathsep)[:-1])
         os.environ["UTILITIES_UNIT_TESTING"] = "0"
+
+
+class TestShowRunAllCommandsMasic(object):
+    @classmethod
+    def setup_class(cls):
+        print("SETUP")
+        os.environ['UTILITIES_UNIT_TESTING'] = "2"
+        os.environ["UTILITIES_UNIT_TESTING_TOPOLOGY"] = "multi_asic"
+        # change to multi asic config
+        from .mock_tables import dbconnector
+        from .mock_tables import mock_multi_asic
+        importlib.reload(mock_multi_asic)
+        dbconnector.load_namespace_config()
+
+    def test_show_runningconfiguration_all_masic(self):
+        def get_cmd_output_side_effect(*args, **kwargs):
+            return "{}", 0
+        with mock.patch('show.main.get_cmd_output',
+                mock.MagicMock(side_effect=get_cmd_output_side_effect)) as mock_get_cmd_output:
+            result = CliRunner().invoke(show.cli.commands['runningconfiguration'].commands['all'], [])
+        assert mock_get_cmd_output.call_count == 3
+        assert mock_get_cmd_output.call_args_list == [
+            call(['sonic-cfggen', '-d', '--print-data']),
+            call(['sonic-cfggen', '-d', '--print-data', '-n', 'asic0']),
+            call(['sonic-cfggen', '-d', '--print-data', '-n', 'asic1'])]
+
+    @classmethod
+    def teardown_class(cls):
+        print("TEARDOWN")
+        os.environ["PATH"] = os.pathsep.join(os.environ["PATH"].split(os.pathsep)[:-1])
+        os.environ["UTILITIES_UNIT_TESTING"] = "0"
+        # change back to single asic config
+        from .mock_tables import dbconnector
+        from .mock_tables import mock_single_asic
+        importlib.reload(mock_single_asic)
+        dbconnector.load_namespace_config()
+
 
 @patch('show.main.run_command')
 @pytest.mark.parametrize(
