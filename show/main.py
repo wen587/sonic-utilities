@@ -1425,25 +1425,24 @@ def runningconfiguration():
 @click.option('--verbose', is_flag=True, help="Enable verbose output")
 def all(verbose):
     """Show full running configuration"""
+    output = {}
+    bgpraw_cmd = "show running-config"
+
+    import utilities_common.bgp_util as bgp_util
+    # In multiaisc, the namespace is changed to 'localhost' by design
+    host_config = get_config_json_by_namespace(multi_asic.DEFAULT_NAMESPACE)
+    output['localhost'] = host_config
 
     if multi_asic.is_multi_asic():
-        output = {}
-        # In multiaisc, the namespace is changed to localhost by design
-        output['localhost'] = get_config_json_by_namespace(multi_asic.DEFAULT_NAMESPACE)
-
         ns_list = multi_asic.get_namespace_list()
         for ns in ns_list:
-            output[ns] = get_config_json_by_namespace(ns)
+            ns_config = get_config_json_by_namespace(ns)
+            ns_config['bgpraw'] = bgp_util.run_bgp_show_command(bgpraw_cmd, ns)
+            output[ns] = ns_config
+        click.echo(json.dumps(output, indent=4))
     else:
-        output = get_config_json_by_namespace(None)
-
-        bgpraw_cmd = [constants.RVTYSH_COMMAND, '-c', 'show running-config']
-        bgpraw, rc = get_cmd_output(bgpraw_cmd)
-        if rc:
-            bgpraw = ""
-        output['bgpraw'] = bgpraw
-
-    click.echo(json.dumps(output, indent=4))
+        host_config['bgpraw'] = bgp_util.run_bgp_show_command(bgpraw_cmd)
+        click.echo(json.dumps(output['localhost'], indent=4))
 
 
 # 'acl' subcommand ("show runningconfiguration acl")

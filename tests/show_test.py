@@ -5,6 +5,7 @@ import pytest
 import importlib
 import subprocess
 import show.main as show
+import utilities_common.bgp_util as bgp_util
 from unittest import mock
 from click.testing import CliRunner
 from utilities_common import constants
@@ -33,6 +34,12 @@ class TestShowRunAllCommands(object):
     def setup_class(cls):
         print("SETUP")
         os.environ["UTILITIES_UNIT_TESTING"] = "1"
+        cls._old_run_bgp_command = bgp_util.run_bgp_command
+        bgp_util.run_bgp_command = mock.MagicMock(
+            return_value=cls.mock_run_bgp_command())
+
+    def mock_run_bgp_command():
+        return ""
 
     def test_show_runningconfiguration_all_json_loads_failure(self):
         def get_cmd_output_side_effect(*args, **kwargs):
@@ -56,14 +63,15 @@ class TestShowRunAllCommands(object):
         with mock.patch('show.main.get_cmd_output',
                 mock.MagicMock(side_effect=get_cmd_output_side_effect)) as mock_get_cmd_output:
             result = CliRunner().invoke(show.cli.commands['runningconfiguration'].commands['all'], [])
-        assert mock_get_cmd_output.call_count == 2
+        assert result.exit_code == 0
+        assert mock_get_cmd_output.call_count == 1
         assert mock_get_cmd_output.call_args_list == [
-            call(['sonic-cfggen', '-d', '--print-data']),
-            call(['rvtysh', '-c', 'show running-config'])]
+            call(['sonic-cfggen', '-d', '--print-data'])]
 
     @classmethod
     def teardown_class(cls):
         print("TEARDOWN")
+        bgp_util.run_bgp_command = cls._old_run_bgp_command
         os.environ["PATH"] = os.pathsep.join(os.environ["PATH"].split(os.pathsep)[:-1])
         os.environ["UTILITIES_UNIT_TESTING"] = "0"
 
@@ -74,11 +82,17 @@ class TestShowRunAllCommandsMasic(object):
         print("SETUP")
         os.environ['UTILITIES_UNIT_TESTING'] = "2"
         os.environ["UTILITIES_UNIT_TESTING_TOPOLOGY"] = "multi_asic"
+        cls._old_run_bgp_command = bgp_util.run_bgp_command
+        bgp_util.run_bgp_command = mock.MagicMock(
+            return_value=cls.mock_run_bgp_command())
         # change to multi asic config
         from .mock_tables import dbconnector
         from .mock_tables import mock_multi_asic
         importlib.reload(mock_multi_asic)
         dbconnector.load_namespace_config()
+
+    def mock_run_bgp_command():
+        return ""
 
     def test_show_runningconfiguration_all_masic(self):
         def get_cmd_output_side_effect(*args, **kwargs):
@@ -86,6 +100,7 @@ class TestShowRunAllCommandsMasic(object):
         with mock.patch('show.main.get_cmd_output',
                 mock.MagicMock(side_effect=get_cmd_output_side_effect)) as mock_get_cmd_output:
             result = CliRunner().invoke(show.cli.commands['runningconfiguration'].commands['all'], [])
+        assert result.exit_code == 0
         assert mock_get_cmd_output.call_count == 3
         assert mock_get_cmd_output.call_args_list == [
             call(['sonic-cfggen', '-d', '--print-data']),
@@ -95,6 +110,7 @@ class TestShowRunAllCommandsMasic(object):
     @classmethod
     def teardown_class(cls):
         print("TEARDOWN")
+        bgp_util.run_bgp_command = cls._old_run_bgp_command
         os.environ["PATH"] = os.pathsep.join(os.environ["PATH"].split(os.pathsep)[:-1])
         os.environ["UTILITIES_UNIT_TESTING"] = "0"
         # change back to single asic config
