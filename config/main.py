@@ -1954,7 +1954,7 @@ def override_config_table(db, input_config_db, dry_run):
         updated_config = update_config(current_config, ns_config_input)
 
         # Enable YANG hard dependecy check to exit early if not satisfied
-        yang_hard_dependency_check(updated_config)
+        table_hard_dependency_check(updated_config)
 
         yang_enabled = device_info.is_yang_config_validation_enabled(config_db)
         if yang_enabled:
@@ -2002,14 +2002,16 @@ def override_config_db(config_db, config_input):
     click.echo("Overriding completed. No service is restarted.")
 
 
-def yang_hard_dependency_check(config_json):
-    aaa_yang_hard_dependency_check(config_json)
+def table_hard_dependency_check(config_json):
+    aaa_table_hard_dependency_check(config_json)
 
 
-def aaa_yang_hard_dependency_check(config_json):
+def aaa_table_hard_dependency_check(config_json):
     AAA_TABLE = config_json.get("AAA", {})
     TACPLUS_TABLE = config_json.get("TACPLUS", {})
-    tacacs_enable = "tacacs+" in AAA_TABLE.get("authorization", {}).get("login", "")
+
+    aaa_authorization_login = AAA_TABLE.get("authorization", {}).get("login", "")
+    tacacs_enable = "tacacs+" in aaa_authorization_login.split(",")
     tacplus_passkey = TACPLUS_TABLE.get("global", {}).get("passkey", "")
     if tacacs_enable and len(tacplus_passkey) == 0:
         click.secho("Authorization with 'tacacs+' is not allowed when passkey not exits.", fg="magenta")
