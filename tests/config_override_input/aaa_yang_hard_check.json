@@ -1,7 +1,7 @@
 {
     "running_config": {
         "AAA": {
-            "authorization": {
+            "authentication": {
                 "login": "tacacs+"
             }
         },
@@ -15,7 +15,7 @@
     },
     "expected_config": {
         "AAA": {
-            "authorization": {
+            "authentication": {
                 "login": "tacacs+"
             }
         },

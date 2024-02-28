@@ -177,7 +177,7 @@ class TestConfigOverride(object):
                                        ['golden_config_db.json'], obj=db)
 
                 assert result.exit_code != 0
-                assert "Authorization with 'tacacs+' is not allowed when passkey not exits." in result.output
+                assert "Authentication with 'tacacs+' is not allowed when passkey not exits." in result.output
 
     def check_override_config_table(self, db, config, running_config,
                                     golden_config, expected_config):

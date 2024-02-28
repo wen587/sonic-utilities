@@ -2010,11 +2010,11 @@ def aaa_table_hard_dependency_check(config_json):
     AAA_TABLE = config_json.get("AAA", {})
     TACPLUS_TABLE = config_json.get("TACPLUS", {})
 
-    aaa_authorization_login = AAA_TABLE.get("authorization", {}).get("login", "")
-    tacacs_enable = "tacacs+" in aaa_authorization_login.split(",")
+    aaa_authentication_login = AAA_TABLE.get("authentication", {}).get("login", "")
+    tacacs_enable = "tacacs+" in aaa_authentication_login.split(",")
     tacplus_passkey = TACPLUS_TABLE.get("global", {}).get("passkey", "")
     if tacacs_enable and len(tacplus_passkey) == 0:
-        click.secho("Authorization with 'tacacs+' is not allowed when passkey not exits.", fg="magenta")
+        click.secho("Authentication with 'tacacs+' is not allowed when passkey not exits.", fg="magenta")
         sys.exit(1)
 
 
