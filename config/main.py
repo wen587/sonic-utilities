@@ -1969,6 +1969,7 @@ def override_config_table(db, input_config_db, dry_run):
             # Validate updated whole config
             validate_config_by_cm(cm, updated_config, "updated_config")
         else:
+            cm = None
             try:
                 cm = ConfigMgmt(configdb=config_db)
                 cm.validateConfigData()
@@ -1976,7 +1977,8 @@ def override_config_table(db, input_config_db, dry_run):
                 log.log_warning("Failed to validate running config. Alerting: {}".format(ex))
 
             # Validate updated whole config
-            validate_config_by_cm_alerting(cm, updated_config, "updated_config")
+            if cm:
+                validate_config_by_cm_alerting(cm, updated_config, "updated_config")
 
         if dry_run:
             print(json.dumps(updated_config, sort_keys=True,
