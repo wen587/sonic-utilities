@@ -1964,12 +1964,13 @@ def override_config_table(db, input_config_db, dry_run):
         else:
             cm = None
             try:
+                # YANG validate of config minigraph generated
                 cm = ConfigMgmt(configdb=config_db)
                 cm.validateConfigData()
             except Exception as ex:
                 log.log_warning("Failed to validate running config. Alerting: {}".format(ex))
 
-            # Validate updated whole config
+            # YANG validate config of minigraph generated overriden by golden config
             if cm:
                 validate_config_by_cm_alerting(cm, updated_config, "updated_config")
 
