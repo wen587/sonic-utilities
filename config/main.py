@@ -2003,7 +2003,7 @@ def validate_config_by_cm_alerting(cm, config_json, jname):
         cm.loadData(tmp_config_json)
         cm.validateConfigData()
     except Exception as ex:
-        click.secho("Failed to validate {}. Alerting: {}".format(jname, ex))
+        log.log_warning("Failed to validate {}. Alerting: {}".format(jname, ex))
 
 
 def override_config_db(config_db, config_input):
