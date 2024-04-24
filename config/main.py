@@ -1237,18 +1237,29 @@ def save(filename):
     if filename is not None:
         cfg_files = filename.split(',')
 
-        if len(cfg_files) != num_cfg_file:
+        # If only one filename is provided in multi-ASIC mode,
+        # save all ASIC configurations to that single file.
+        if len(cfg_files) == 1 and multi_asic.is_multi_asic():
+            single_file_mode = True
+            filename = cfg_files[0]
+            cfg_files = [filename] * num_cfg_file
+        elif len(cfg_files) != num_cfg_file:
             click.echo("Input {} config file(s) separated by comma for multiple files ".format(num_cfg_file))
             return
+        else:
+            single_file_mode = False
 
-    # In case of multi-asic mode we have additional config_db{NS}.json files for
-    # various namespaces created per ASIC. {NS} is the namespace index.
+    # List to hold config DB for all ASICs
+    all_files_config = {}
+
     for inst in range(-1, num_cfg_file-1):
         #inst = -1, refers to the linux host where there is no namespace.
         if inst == -1:
             namespace = None
+            asic_name = "localhost"
         else:
             namespace = "{}{}".format(NAMESPACE_PREFIX, inst)
+            asic_name = namespace
 
         # Get the file from user input, else take the default file /etc/sonic/config_db{NS_id}.json
         if cfg_files:
@@ -1270,6 +1281,16 @@ def save(filename):
         config_db = sort_dict(read_json_file(file))
         with open(file, 'w') as config_db_file:
             json.dump(config_db, config_db_file, indent=4)
+
+        # Append config DB to all_files_config
+        all_files_config[asic_name] = config_db
+
+    # If filename is provided and multi-ASIC mode, save all ASICs' configurations to a single file
+    if filename is not None and multi_asic.is_multi_asic():
+        if single_file_mode:
+            click.echo("Integrate each ASIC's config into a single JSON file {}.".format(filename))
+            with open(filename, 'w') as all_files_file:
+                json.dump(all_files_config, all_files_file, indent=4)
 
 @config.command()
 @click.option('-y', '--yes', is_flag=True)
