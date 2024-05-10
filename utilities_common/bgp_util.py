@@ -198,7 +198,7 @@ def get_neighbor_dict_from_table(db, table_name):
 
 
 def run_bgp_command(vtysh_cmd, bgp_namespace=multi_asic.DEFAULT_NAMESPACE,
-        vtysh_shell_cmd=constants.VTYSH_COMMAND, exit_on_fail=True):
+                    vtysh_shell_cmd=constants.VTYSH_COMMAND, exit_on_fail=True):
     bgp_instance_id = []
     output = None
     if bgp_namespace is not multi_asic.DEFAULT_NAMESPACE:
