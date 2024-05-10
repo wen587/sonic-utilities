@@ -335,7 +335,8 @@ def setup_multi_asic_bgp_instance(request):
         else:
             return ""
 
-    def mock_run_show_sum_bgp_command(vtysh_cmd, bgp_namespace, vtysh_shell_cmd=constants.VTYSH_COMMAND, exit_on_fail=True):
+    def mock_run_show_sum_bgp_command(
+            vtysh_cmd, bgp_namespace, vtysh_shell_cmd=constants.VTYSH_COMMAND, exit_on_fail=True):
         if vtysh_cmd == "show ip bgp summary json":
             m_asic_json_file = 'no_bgp_neigh.json'
         else:
@@ -351,7 +352,7 @@ def setup_multi_asic_bgp_instance(request):
             return ""
 
     def mock_run_show_summ_bgp_command_no_ext_neigh_on_all_asic(
-        vtysh_cmd, bgp_namespace, vtysh_shell_cmd=constants.VTYSH_COMMAND, exit_on_fail=True):
+            vtysh_cmd, bgp_namespace, vtysh_shell_cmd=constants.VTYSH_COMMAND, exit_on_fail=True):
         if vtysh_cmd == "show ip bgp summary json":
             m_asic_json_file = 'no_ext_bgp_neigh.json'
         else:
