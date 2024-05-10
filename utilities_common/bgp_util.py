@@ -213,8 +213,7 @@ def run_bgp_command(vtysh_cmd, bgp_namespace=multi_asic.DEFAULT_NAMESPACE,
                 sys.exit(ret)
     except Exception:
         ctx = click.get_current_context()
-        if exit_on_fail:
-            ctx.fail("Unable to get summary from bgp {}".format(bgp_instance_id))
+        ctx.fail("Unable to get summary from bgp {}".format(bgp_instance_id)) if exit_on_fail else None
 
     return output
 
