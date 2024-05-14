@@ -167,27 +167,27 @@ Restarting SONiC target ...
 Reloading Monit configuration ...
 """
 
-save_config_output="""\
+save_config_output = """\
 Running command: /usr/local/bin/sonic-cfggen -d --print-data > /etc/sonic/config_db.json
 """
 
-save_config_filename_output="""\
+save_config_filename_output = """\
 Running command: /usr/local/bin/sonic-cfggen -d --print-data > /tmp/config_db.json
 """
 
-save_config_masic_output="""\
+save_config_masic_output = """\
 Running command: /usr/local/bin/sonic-cfggen -d --print-data > /etc/sonic/config_db.json
 Running command: /usr/local/bin/sonic-cfggen -n asic0 -d --print-data > /etc/sonic/config_db0.json
 Running command: /usr/local/bin/sonic-cfggen -n asic1 -d --print-data > /etc/sonic/config_db1.json
 """
 
-save_config_filename_masic_output="""\
+save_config_filename_masic_output = """\
 Running command: /usr/local/bin/sonic-cfggen -d --print-data > config_db.json
 Running command: /usr/local/bin/sonic-cfggen -n asic0 -d --print-data > config_db0.json
 Running command: /usr/local/bin/sonic-cfggen -n asic1 -d --print-data > config_db1.json
 """
 
-save_config_onefile_masic_output="""\
+save_config_onefile_masic_output = """\
 Integrate each ASIC's config into a single JSON file /tmp/all_config_db.json.
 """
 
@@ -333,14 +333,16 @@ class TestConfigSave(object):
         import config.main
         importlib.reload(config.main)
 
-
     def test_config_save(self, get_cmd_module, setup_single_broadcom_asic):
         def read_json_file_side_effect(filename):
             return {}
 
-        with mock.patch("utilities_common.cli.run_command", mock.MagicMock(side_effect=mock_run_command_side_effect)) as mock_run_command,\
-            mock.patch('config.main.read_json_file', mock.MagicMock(side_effect=read_json_file_side_effect)),\
-            mock.patch('config.main.open', mock.MagicMock()) as mocked_open:
+        with mock.patch("utilities_common.cli.run_command",
+                        mock.MagicMock(side_effect=mock_run_command_side_effect)) as mock_run_command,\
+            mock.patch('config.main.read_json_file',
+                       mock.MagicMock(side_effect=read_json_file_side_effect)),\
+            mock.patch('config.main.open',
+                       mock.MagicMock()) as mocked_open:
             (config, show) = get_cmd_module
 
             runner = CliRunner()
@@ -352,15 +354,18 @@ class TestConfigSave(object):
             traceback.print_tb(result.exc_info[2])
 
             assert result.exit_code == 0
-            assert "\n".join([l.rstrip() for l in result.output.split('\n')]) == save_config_output
+            assert "\n".join([li.rstrip() for li in result.output.split('\n')]) == save_config_output
 
     def test_config_save_filename(self, get_cmd_module, setup_single_broadcom_asic):
         def read_json_file_side_effect(filename):
             return {}
 
-        with mock.patch("utilities_common.cli.run_command", mock.MagicMock(side_effect=mock_run_command_side_effect)) as mock_run_command,\
-            mock.patch('config.main.read_json_file', mock.MagicMock(side_effect=read_json_file_side_effect)),\
-            mock.patch('config.main.open', mock.MagicMock()) as mocked_open:
+        with mock.patch("utilities_common.cli.run_command",
+                        mock.MagicMock(side_effect=mock_run_command_side_effect)) as mock_run_command,\
+            mock.patch('config.main.read_json_file',
+                       mock.MagicMock(side_effect=read_json_file_side_effect)),\
+            mock.patch('config.main.open',
+                       mock.MagicMock()) as mocked_open:
 
             (config, show) = get_cmd_module
 
@@ -374,7 +379,7 @@ class TestConfigSave(object):
             traceback.print_tb(result.exc_info[2])
 
             assert result.exit_code == 0
-            assert "\n".join([l.rstrip() for l in result.output.split('\n')]) == save_config_filename_output
+            assert "\n".join([li.rstrip() for li in result.output.split('\n')]) == save_config_filename_output
 
     @classmethod
     def teardown_class(cls):
@@ -396,14 +401,16 @@ class TestConfigSaveMasic(object):
         importlib.reload(mock_multi_asic)
         dbconnector.load_namespace_config()
 
-    def test_config_save_masic(self, get_cmd_module, setup_multi_broadcom_masic):
+    def test_config_save_masic(self):
         def read_json_file_side_effect(filename):
             return {}
 
-        with mock.patch("utilities_common.cli.run_command", mock.MagicMock(side_effect=mock_run_command_side_effect)) as mock_run_command,\
-            mock.patch('config.main.read_json_file', mock.MagicMock(side_effect=read_json_file_side_effect)),\
-            mock.patch('config.main.open', mock.MagicMock()) as mocked_open:
-            (config, show) = get_cmd_module
+        with mock.patch("utilities_common.cli.run_command",
+                        mock.MagicMock(side_effect=mock_run_command_side_effect)) as mock_run_command,\
+            mock.patch('config.main.read_json_file',
+                       mock.MagicMock(side_effect=read_json_file_side_effect)),\
+            mock.patch('config.main.open',
+                       mock.MagicMock()) as mocked_open:
 
             runner = CliRunner()
 
@@ -414,16 +421,18 @@ class TestConfigSaveMasic(object):
             traceback.print_tb(result.exc_info[2])
 
             assert result.exit_code == 0
-            assert "\n".join([l.rstrip() for l in result.output.split('\n')]) == save_config_masic_output
+            assert "\n".join([li.rstrip() for li in result.output.split('\n')]) == save_config_masic_output
 
-    def test_config_save_filename_masic(self, get_cmd_module, setup_multi_broadcom_masic):
+    def test_config_save_filename_masic(self):
         def read_json_file_side_effect(filename):
             return {}
 
-        with mock.patch("utilities_common.cli.run_command", mock.MagicMock(side_effect=mock_run_command_side_effect)) as mock_run_command,\
-            mock.patch('config.main.read_json_file', mock.MagicMock(side_effect=read_json_file_side_effect)),\
-            mock.patch('config.main.open', mock.MagicMock()) as mocked_open:
-            (config, show) = get_cmd_module
+        with mock.patch("utilities_common.cli.run_command",
+                        mock.MagicMock(side_effect=mock_run_command_side_effect)) as mock_run_command,\
+            mock.patch('config.main.read_json_file',
+                       mock.MagicMock(side_effect=read_json_file_side_effect)),\
+            mock.patch('config.main.open',
+                       mock.MagicMock()) as mocked_open:
 
             runner = CliRunner()
 
@@ -437,16 +446,13 @@ class TestConfigSaveMasic(object):
             traceback.print_tb(result.exc_info[2])
 
             assert result.exit_code == 0
-            assert "\n".join([l.rstrip() for l in result.output.split('\n')]) == save_config_filename_masic_output
+            assert "\n".join([li.rstrip() for li in result.output.split('\n')]) == save_config_filename_masic_output
 
-    def test_config_save_filename_wrong_cnt_masic(self, get_cmd_module, setup_multi_broadcom_masic):
+    def test_config_save_filename_wrong_cnt_masic(self):
         def read_json_file_side_effect(filename):
             return {}
 
-        with mock.patch("utilities_common.cli.run_command", mock.MagicMock(side_effect=mock_run_command_side_effect)) as mock_run_command,\
-            mock.patch('config.main.read_json_file', mock.MagicMock(side_effect=read_json_file_side_effect)),\
-            mock.patch('config.main.open', mock.MagicMock()) as mocked_open:
-            (config, show) = get_cmd_module
+        with mock.patch('config.main.read_json_file', mock.MagicMock(side_effect=read_json_file_side_effect)):
 
             runner = CliRunner()
 
@@ -465,10 +471,8 @@ class TestConfigSaveMasic(object):
         def get_config_side_effect():
             return {}
 
-        with mock.patch("utilities_common.cli.run_command", mock.MagicMock(side_effect=mock_run_command_side_effect)) as mock_run_command,\
-            mock.patch('swsscommon.swsscommon.ConfigDBConnector.get_config',
-                       mock.MagicMock(side_effect=get_config_side_effect)):
-
+        with mock.patch('swsscommon.swsscommon.ConfigDBConnector.get_config',
+                        mock.MagicMock(side_effect=get_config_side_effect)):
             runner = CliRunner()
 
             output_file = os.path.join(os.sep, "tmp", "all_config_db.json")
@@ -485,7 +489,7 @@ class TestConfigSaveMasic(object):
             print(result.exit_code)
             print(result.output)
             assert result.exit_code == 0
-            assert "\n".join([l.rstrip() for l in result.output.split('\n')]) == save_config_onefile_masic_output
+            assert "\n".join([li.rstrip() for li in result.output.split('\n')]) == save_config_onefile_masic_output
 
             cwd = os.path.dirname(os.path.realpath(__file__))
             expected_result = os.path.join(
