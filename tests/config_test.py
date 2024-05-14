@@ -188,9 +188,6 @@ Running command: /usr/local/bin/sonic-cfggen -n asic1 -d --print-data > config_d
 """
 
 save_config_onefile_masic_output="""\
-Running command: /usr/local/bin/sonic-cfggen -d --print-data > /tmp/all_config_db.json
-Running command: /usr/local/bin/sonic-cfggen -n asic0 -d --print-data > /tmp/all_config_db.json
-Running command: /usr/local/bin/sonic-cfggen -n asic1 -d --print-data > /tmp/all_config_db.json
 Integrate each ASIC's config into a single JSON file /tmp/all_config_db.json.
 """
 
@@ -343,7 +340,7 @@ class TestConfigSave(object):
 
         with mock.patch("utilities_common.cli.run_command", mock.MagicMock(side_effect=mock_run_command_side_effect)) as mock_run_command,\
             mock.patch('config.main.read_json_file', mock.MagicMock(side_effect=read_json_file_side_effect)),\
-            mock.patch('builtins.open', mock.MagicMock()) as mocked_open:
+            mock.patch('config.main.open', mock.MagicMock()) as mocked_open:
             (config, show) = get_cmd_module
 
             runner = CliRunner()
@@ -363,7 +360,7 @@ class TestConfigSave(object):
 
         with mock.patch("utilities_common.cli.run_command", mock.MagicMock(side_effect=mock_run_command_side_effect)) as mock_run_command,\
             mock.patch('config.main.read_json_file', mock.MagicMock(side_effect=read_json_file_side_effect)),\
-            mock.patch('builtins.open', mock.MagicMock()) as mocked_open:
+            mock.patch('config.main.open', mock.MagicMock()) as mocked_open:
 
             (config, show) = get_cmd_module
 
@@ -405,7 +402,7 @@ class TestConfigSaveMasic(object):
 
         with mock.patch("utilities_common.cli.run_command", mock.MagicMock(side_effect=mock_run_command_side_effect)) as mock_run_command,\
             mock.patch('config.main.read_json_file', mock.MagicMock(side_effect=read_json_file_side_effect)),\
-            mock.patch('builtins.open', mock.MagicMock()) as mocked_open:
+            mock.patch('config.main.open', mock.MagicMock()) as mocked_open:
             (config, show) = get_cmd_module
 
             runner = CliRunner()
@@ -425,7 +422,7 @@ class TestConfigSaveMasic(object):
 
         with mock.patch("utilities_common.cli.run_command", mock.MagicMock(side_effect=mock_run_command_side_effect)) as mock_run_command,\
             mock.patch('config.main.read_json_file', mock.MagicMock(side_effect=read_json_file_side_effect)),\
-            mock.patch('builtins.open', mock.MagicMock()) as mocked_open:
+            mock.patch('config.main.open', mock.MagicMock()) as mocked_open:
             (config, show) = get_cmd_module
 
             runner = CliRunner()
@@ -448,7 +445,7 @@ class TestConfigSaveMasic(object):
 
         with mock.patch("utilities_common.cli.run_command", mock.MagicMock(side_effect=mock_run_command_side_effect)) as mock_run_command,\
             mock.patch('config.main.read_json_file', mock.MagicMock(side_effect=read_json_file_side_effect)),\
-            mock.patch('builtins.open', mock.MagicMock()) as mocked_open:
+            mock.patch('config.main.open', mock.MagicMock()) as mocked_open:
             (config, show) = get_cmd_module
 
             runner = CliRunner()
@@ -464,14 +461,13 @@ class TestConfigSaveMasic(object):
 
             assert "Input 3 config file(s) separated by comma for multiple files" in result.output
 
-    def test_config_save_onefile_masic(self, get_cmd_module, setup_multi_broadcom_masic):
-        def read_json_file_side_effect(filename):
+    def test_config_save_onefile_masic(self):
+        def get_config_side_effect():
             return {}
 
         with mock.patch("utilities_common.cli.run_command", mock.MagicMock(side_effect=mock_run_command_side_effect)) as mock_run_command,\
-            mock.patch('config.main.read_json_file', mock.MagicMock(side_effect=read_json_file_side_effect)):
-            #mock.patch('builtins.open', mock.MagicMock()) as mocked_open:
-            (config, show) = get_cmd_module
+            mock.patch('swsscommon.swsscommon.ConfigDBConnector.get_config',
+                       mock.MagicMock(side_effect=get_config_side_effect)):
 
             runner = CliRunner()
 

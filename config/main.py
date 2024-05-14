@@ -1155,6 +1155,22 @@ def validate_gre_type(ctx, _, value):
     except ValueError:
         raise click.UsageError("{} is not a valid GRE type".format(value))
 
+def save_to_single_file_multi(db, filename):
+    """A function to save all asic's config to single file
+    """
+    all_files_config = {}
+    cfgdb_clients = db.cfgdb_clients
+
+    for ns, config_db in cfgdb_clients.items():
+        current_config = config_db.get_config()
+        sonic_cfggen.FormatConverter.to_serialized(current_config)
+        asic_name = "localhost" if ns == DEFAULT_NAMESPACE else ns
+        all_files_config[asic_name] = sort_dict(current_config)
+    click.echo("Integrate each ASIC's config into a single JSON file {}.".format(filename))
+    with open(filename, 'w') as all_files_file:
+        json.dump(all_files_config, all_files_file, indent=4)
+
+
 # This is our main entrypoint - the main 'config' command
 @click.group(cls=clicommon.AbbreviationGroup, context_settings=CONTEXT_SETTINGS)
 @click.pass_context
@@ -1222,7 +1238,8 @@ config.add_command(switchport.switchport)
 @click.option('-y', '--yes', is_flag=True, callback=_abort_if_false,
                 expose_value=False, prompt='Existing files will be overwritten, continue?')
 @click.argument('filename', required=False)
-def save(filename):
+@clicommon.pass_db
+def save(db, filename):
     """Export current config DB to a file on disk.\n
        <filename> : Names of configuration file(s) to save, separated by comma with no spaces in between
     """
@@ -1240,26 +1257,21 @@ def save(filename):
         # If only one filename is provided in multi-ASIC mode,
         # save all ASIC configurations to that single file.
         if len(cfg_files) == 1 and multi_asic.is_multi_asic():
-            single_file_mode = True
             filename = cfg_files[0]
-            cfg_files = [filename] * num_cfg_file
+            save_to_single_file_multi(db, filename)
+            return
         elif len(cfg_files) != num_cfg_file:
             click.echo("Input {} config file(s) separated by comma for multiple files ".format(num_cfg_file))
             return
-        else:
-            single_file_mode = False
 
-    # List to hold config DB for all ASICs
-    all_files_config = {}
-
+    # In case of multi-asic mode we have additional config_db{NS}.json files for
+    # various namespaces created per ASIC. {NS} is the namespace index.
     for inst in range(-1, num_cfg_file-1):
         #inst = -1, refers to the linux host where there is no namespace.
         if inst == -1:
             namespace = None
-            asic_name = "localhost"
         else:
             namespace = "{}{}".format(NAMESPACE_PREFIX, inst)
-            asic_name = namespace
 
         # Get the file from user input, else take the default file /etc/sonic/config_db{NS_id}.json
         if cfg_files:
@@ -1281,16 +1293,6 @@ def save(filename):
         config_db = sort_dict(read_json_file(file))
         with open(file, 'w') as config_db_file:
             json.dump(config_db, config_db_file, indent=4)
-
-        # Append config DB to all_files_config
-        all_files_config[asic_name] = config_db
-
-    # If filename is provided and multi-ASIC mode, save all ASICs' configurations to a single file
-    if filename is not None and multi_asic.is_multi_asic():
-        if single_file_mode:
-            click.echo("Integrate each ASIC's config into a single JSON file {}.".format(filename))
-            with open(filename, 'w') as all_files_file:
-                json.dump(all_files_config, all_files_file, indent=4)
 
 @config.command()
 @click.option('-y', '--yes', is_flag=True)
