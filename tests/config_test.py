@@ -338,11 +338,11 @@ class TestConfigSave(object):
             return {}
 
         with mock.patch("utilities_common.cli.run_command",
-                        mock.MagicMock(side_effect=mock_run_command_side_effect)) as mock_run_command,\
+                        mock.MagicMock(side_effect=mock_run_command_side_effect)),\
             mock.patch('config.main.read_json_file',
                        mock.MagicMock(side_effect=read_json_file_side_effect)),\
             mock.patch('config.main.open',
-                       mock.MagicMock()) as mocked_open:
+                       mock.MagicMock()):
             (config, show) = get_cmd_module
 
             runner = CliRunner()
@@ -361,11 +361,11 @@ class TestConfigSave(object):
             return {}
 
         with mock.patch("utilities_common.cli.run_command",
-                        mock.MagicMock(side_effect=mock_run_command_side_effect)) as mock_run_command,\
+                        mock.MagicMock(side_effect=mock_run_command_side_effect)),\
             mock.patch('config.main.read_json_file',
                        mock.MagicMock(side_effect=read_json_file_side_effect)),\
             mock.patch('config.main.open',
-                       mock.MagicMock()) as mocked_open:
+                       mock.MagicMock()):
 
             (config, show) = get_cmd_module
 
@@ -406,11 +406,11 @@ class TestConfigSaveMasic(object):
             return {}
 
         with mock.patch("utilities_common.cli.run_command",
-                        mock.MagicMock(side_effect=mock_run_command_side_effect)) as mock_run_command,\
+                        mock.MagicMock(side_effect=mock_run_command_side_effect)),\
             mock.patch('config.main.read_json_file',
                        mock.MagicMock(side_effect=read_json_file_side_effect)),\
             mock.patch('config.main.open',
-                       mock.MagicMock()) as mocked_open:
+                       mock.MagicMock()):
 
             runner = CliRunner()
 
@@ -428,11 +428,11 @@ class TestConfigSaveMasic(object):
             return {}
 
         with mock.patch("utilities_common.cli.run_command",
-                        mock.MagicMock(side_effect=mock_run_command_side_effect)) as mock_run_command,\
+                        mock.MagicMock(side_effect=mock_run_command_side_effect)),\
             mock.patch('config.main.read_json_file',
                        mock.MagicMock(side_effect=read_json_file_side_effect)),\
             mock.patch('config.main.open',
-                       mock.MagicMock()) as mocked_open:
+                       mock.MagicMock()):
 
             runner = CliRunner()
 
