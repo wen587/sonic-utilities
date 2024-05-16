@@ -1155,7 +1155,7 @@ def validate_gre_type(ctx, _, value):
     except ValueError:
         raise click.UsageError("{} is not a valid GRE type".format(value))
 
-def save_to_single_file_multi(db, filename):
+def multi_asic_save_config(db, filename):
     """A function to save all asic's config to single file
     """
     all_files_config = {}
@@ -1258,7 +1258,7 @@ def save(db, filename):
         # save all ASIC configurations to that single file.
         if len(cfg_files) == 1 and multi_asic.is_multi_asic():
             filename = cfg_files[0]
-            save_to_single_file_multi(db, filename)
+            multi_asic_save_config(db, filename)
             return
         elif len(cfg_files) != num_cfg_file:
             click.echo("Input {} config file(s) separated by comma for multiple files ".format(num_cfg_file))
