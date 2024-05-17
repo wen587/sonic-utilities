@@ -1158,17 +1158,17 @@ def validate_gre_type(ctx, _, value):
 def multi_asic_save_config(db, filename):
     """A function to save all asic's config to single file
     """
-    all_files_config = {}
+    all_current_config = {}
     cfgdb_clients = db.cfgdb_clients
 
     for ns, config_db in cfgdb_clients.items():
         current_config = config_db.get_config()
         sonic_cfggen.FormatConverter.to_serialized(current_config)
         asic_name = "localhost" if ns == DEFAULT_NAMESPACE else ns
-        all_files_config[asic_name] = sort_dict(current_config)
+        all_current_config[asic_name] = sort_dict(current_config)
     click.echo("Integrate each ASIC's config into a single JSON file {}.".format(filename))
-    with open(filename, 'w') as all_files_file:
-        json.dump(all_files_config, all_files_file, indent=4)
+    with open(filename, 'w') as file:
+        json.dump(all_current_config, file, indent=4)
 
 
 # This is our main entrypoint - the main 'config' command
