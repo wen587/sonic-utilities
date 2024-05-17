@@ -719,7 +719,7 @@ def autoneg_status(interfacename, namespace, display, verbose):
 
     cmd = ['intfutil', '-c', 'autoneg']
 
-    #ignore the display option when interface name is passed
+    # ignore the display option when interface name is passed
     if interfacename is not None:
         interfacename = try_convert_interfacename_from_alias(ctx, interfacename)
 
@@ -735,6 +735,8 @@ def autoneg_status(interfacename, namespace, display, verbose):
 #
 # link-training group (show interfaces link-training ...)
 #
+
+
 @interfaces.group(name='link-training', cls=clicommon.AliasedGroup)
 def link_training():
     """Show interface link-training information"""
@@ -752,7 +754,7 @@ def link_training_status(interfacename, namespace, display, verbose):
 
     cmd = ['intfutil', '-c', 'link_training']
 
-    #ignore the display option when interface name is passed
+    # ignore the display option when interface name is passed
     if interfacename is not None:
         interfacename = try_convert_interfacename_from_alias(ctx, interfacename)
 
@@ -785,7 +787,7 @@ def fec_status(interfacename, namespace, display, verbose):
 
     cmd = ['intfutil', '-c', 'fec']
 
-    #ignore the display option when interface name is passed
+    # ignore the display option when interface name is passed
     if interfacename is not None:
         interfacename = try_convert_interfacename_from_alias(ctx, interfacename)
 
@@ -798,10 +800,11 @@ def fec_status(interfacename, namespace, display, verbose):
 
     clicommon.run_command(cmd, display_cmd=verbose)
 
-
 #
 # switchport group (show interfaces switchport ...)
 #
+
+
 @interfaces.group(name='switchport', cls=clicommon.AliasedGroup)
 def switchport():
     """Show interface switchport information"""
@@ -819,9 +822,8 @@ def switchport_mode_config(db):
     portchannel_member_table = db.cfgdb.get_table('PORTCHANNEL_MEMBER')
 
     for interface in port_data:
-        if clicommon.interface_is_in_portchannel(portchannel_member_table,interface):
+        if clicommon.interface_is_in_portchannel(portchannel_member_table, interface):
             port_data.remove(interface)
-
 
     keys = port_data + portchannel_data
 
@@ -829,13 +831,17 @@ def switchport_mode_config(db):
         table = []
 
         for key in natsorted(keys):
-            r = [clicommon.get_interface_name_for_display(db, key), clicommon.get_interface_switchport_mode(db,key), clicommon.get_interface_untagged_vlan_members(db,key), clicommon.get_interface_tagged_vlan_members(db,key)]
+            r = [clicommon.get_interface_name_for_display(db, key),
+                 clicommon.get_interface_switchport_mode(db, key),
+                 clicommon.get_interface_untagged_vlan_members(db, key),
+                 clicommon.get_interface_tagged_vlan_members(db, key)]
             table.append(r)
 
         return table
-    
+
     header = ['Interface', 'Mode', 'Untagged', 'Tagged']
     click.echo(tabulate(tablelize(keys), header, tablefmt="simple", stralign='left'))
+
 
 @switchport.command(name="status")
 @clicommon.pass_db
@@ -848,19 +854,19 @@ def switchport_mode_status(db):
     portchannel_member_table = db.cfgdb.get_table('PORTCHANNEL_MEMBER')
 
     for interface in port_data:
-        if clicommon.interface_is_in_portchannel(portchannel_member_table,interface):
+        if clicommon.interface_is_in_portchannel(portchannel_member_table, interface):
             port_data.remove(interface)
 
     keys = port_data + portchannel_data
-        
+
     def tablelize(keys):
         table = []
 
         for key in natsorted(keys):
-            r = [clicommon.get_interface_name_for_display(db, key), clicommon.get_interface_switchport_mode(db,key)]
+            r = [clicommon.get_interface_name_for_display(db, key), clicommon.get_interface_switchport_mode(db, key)]
             table.append(r)
 
         return table
-    
+
     header = ['Interface', 'Mode']
-    click.echo(tabulate(tablelize(keys), header,tablefmt="simple", stralign='left'))
+    click.echo(tabulate(tablelize(keys), header, tablefmt="simple", stralign='left'))

@@ -1251,6 +1251,7 @@ collect_mellanox() {
       echo "HW Mgmt dump script $HW_DUMP_FILE does not exist"
     fi
 
+    save_cmd "get_component_versions.py" "component_versions"
 }
 
 ###############################################################################
@@ -1563,6 +1564,27 @@ collect_cisco_8000() {
     else
         echo "'/usr/share/sonic/device/${platform}' does not exist" > /tmp/error
         save_file /tmp/error sai false
+    fi
+
+    save_cmd "show platform versions" "platform.versions"
+
+    # run 'hw-management-generate-dump.sh' script and save the result file
+    HW_DUMP_FILE=/usr/bin/hw-management-generate-dump.sh
+    if [[ -x $HW_DUMP_FILE ]]; then
+      ${CMD_PREFIX} $HW_DUMP_FILE $ALLOW_PROCESS_STOP
+      ret=$?
+      if [[ $ret -ne 0 ]]; then
+        if [[ $ret -eq $TIMEOUT_EXIT_CODE ]]; then
+          echo "hw-management dump timedout after ${TIMEOUT_MIN} minutes."
+        else
+          echo "hw-management dump failed ..."
+        fi
+      else
+        save_file "/tmp/hw-mgmt-dump*" "hw-mgmt" false
+        rm -f /tmp/hw-mgmt-dump*
+      fi
+    else
+      echo "HW Mgmt dump script $HW_DUMP_FILE does not exist"
     fi
 }
 
@@ -1929,6 +1951,8 @@ main() {
     local device_type=`sonic-db-cli CONFIG_DB hget 'DEVICE_METADATA|localhost' type`
     # 1st counter snapshot early. Need 2 snapshots to make sense of counters trend.
     save_counter_snapshot $asic 1
+
+    save_cmd "show asic-sdk-health-event received" "asic.sdk.health.event" &
 
     save_cmd "systemd-analyze blame" "systemd.analyze.blame" &
     save_cmd "systemd-analyze dump" "systemd.analyze.dump" &

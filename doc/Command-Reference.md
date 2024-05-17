@@ -29,6 +29,10 @@
 * [ARP & NDP](#arp--ndp)
   * [ARP show commands](#arp-show-commands)
   * [NDP show commands](#ndp-show-commands)
+* [ASIC SDK health event](#asic-sdk-health-event)
+  * [ASIC SDK health event config commands](#asic-sdk-health-event-config-commands)
+  * [ASIC SDK health event show commands](#asic-sdk-health-event-show-commands)
+  * [ASIC SDK health event clear commands](#asic-sdk-health-event-clear-commands)
 * [BFD](#bfd)
   * [BFD show commands](#bfd-show-commands)
 * [BGP](#bgp)
@@ -92,6 +96,11 @@
 * [Linux Kernel Dump](#linux-kernel-dump)
   * [Linux Kernel Dump show commands](#Linux-Kernel-Dump-show-commands)
   * [Linux Kernel Dump config commands](#Linux-Kernel-Dump-config-commands)
+* [LDAP](#LDAP)
+  * [show LDAP global commands](#LDAP-global-show-commands)
+  * [LDAP global config commands](#LDAP-global-config-commands)
+  * [show LDAP server commands](#LDAP-server-show-commands)
+  * [LDAP server config commands](#LDAP-server-config-commands)
 * [LLDP](#lldp)
   * [LLDP show commands](#lldp-show-commands)
 * [Loading, Reloading And Saving Configuration](#loading-reloading-and-saving-configuration)
@@ -162,7 +171,7 @@
 * [Subinterfaces](#subinterfaces)
   * [Subinterfaces Show Commands](#subinterfaces-show-commands)
   * [Subinterfaces Config Commands](#subinterfaces-config-commands)
-* [Switchport Modes](#switchport-modes)
+  * [Switchport Modes](#switchport-modes)
   * [Switchport Modes Config Commands](#switchportmodes-config-commands)
 * [Syslog](#syslog)
   * [Syslog show commands](#syslog-show-commands)
@@ -1930,6 +1939,158 @@ This command is used to display: ACL rules, tables and their priority, ACL packe
 
   If the `PACKETS COUNT` and `BYTES COUNT` fields have some numeric value it means that it is a SONiC ACL's and those counters are created in SONiC `COUNTERS_DB`.
 
+## ASIC SDK health event
+
+### ASIC SDK health event config commands
+
+**config asic-sdk-health-event suppress **
+
+This command is for a customer to configure the categories that he/she wants to suppress for a certain severity.
+
+- Usage:
+  ```
+  config config asic-sdk-health-event suppress <severity> [--category-list <category-list>|<none>|<all>] [--max-events <max-events>]
+  ```
+
+  - Parameters:
+    - severity: Specify the severity whose ASIC/SDK health events to be suppressed. It can be one of `fatal`, `warning`, and `notice`.
+    - category-list: Specify the categories from which the ASIC/SDK health events to be suppressed. It is a list whose element is one of `software`, `firmware`, `cpu_hw`, `asic_hw` separated by a comma.
+      If the category-list is `none`, none category is suppressed and all the categories will be notified for `severity`. In this case, it will not be stored in the CONFIG_DB.
+      If the category-list is `all`, all the categories are suppressed and none category will be notified for `severity`.
+    - max-events: Specify the maximum number of events of the severity to be stored in the STATE_DB.
+      There is no limitation if the max-events is 0. In this case, it will not be stored in the CONFIG_DB.
+
+- Examples:
+  ```
+  admin@sonic:~$ sudo config asic-sdk-health-event suppress fatal --category-list cpu_hw,software --max-events 10240
+  ```
+
+  This command will suppress ASIC/SDK health events whose severity is fatal and cagetory is cpu_hw or software. Maximum number of such events in the STATE_DB is 10240.
+
+### ASIC SDK health event show commands
+
+**show asic-sdk-health-event received**
+
+This command displays the received ASIC/SDK health events.
+
+- Usage:
+  ```
+  show asic-sdk-health-event received [-n <asicname>]
+  ```
+
+- Details:
+  - show asic-sdk-health-event received: Display the ASIC/SDK health events received on all ASICs
+  - show asic-sdk-health-event received -n asic0: Display all the ASIC/SDK health events received on asic0
+
+
+- Example:
+  ```
+  admin@sonic:~$ show asic-sdk-health-event received
+  Time                 Severity     Category   Description
+  -------------------  -----------  ---------  -----------------
+  2023-10-20 05:07:34  fatal        firmware   Command timeout
+  2023-10-20 03:06:25  fatal        software   SDK daemon keep alive failed
+  2023-10-20 05:07:34  fatal        asic_hw    Uncorrectable ECC error
+  2023-10-20 01:58:43  notice       asic_hw    Correctable ECC error
+  ```
+
+- Example on a multi ASIC system:
+  ```
+  admin@sonic:~$ show asic-sdk-health-event received
+  asic0:
+  Time                 Severity     Category   Description
+  -------------------  -----------  ---------  -----------------
+  2023-10-20 05:07:34  fatal        firmware   Command timeout
+  2023-10-20 03:06:25  fatal        software   SDK daemon keep alive failed
+  asic1:
+  Time                 Severity     Category   Description
+  -------------------  -----------  ---------  -----------------
+  2023-10-20 05:07:34  fatal        asic_hw    Uncorrectable ECC error
+  2023-10-20 01:58:43  notice       asic_hw    Correctable ECC error
+  ```
+
+Optionally, you can specify the asic name in order to display the ASIC/SDK health events received on that particular ASIC on a multi ASIC system
+
+- Example:
+  ```
+  admin@sonic:~$ show asic-sdk-health-event received -n asic1
+  asic1:
+  Time                 Severity     Category   Description
+  -------------------  -----------  ---------  -----------------
+  2023-10-20 05:07:34  fatal        firmware   Command timeout
+  ```
+
+**show asic-sdk-health-event suppress-configuration**
+
+This command displays the suppressed category list and maximum number of events of ASIC/SDK health events.
+
+- Usage:
+  ```
+  show asic-sdk-health-event suppressed-category-list [-n <asicname>]
+  ```
+
+- Details:
+  - show asic-sdk-health-event suppress-configuration: Display the ASIC/SDK health event suppress category list and maximum number of events on all ASICs
+  - show asic-sdk-health-event suppress-configuration -n asic0: Display all the ASIC/SDK health event suppress category list and maximum number of events on asic0
+
+
+- Example:
+  ```
+  admin@sonic:~$ show asic-sdk-health-event suppress-configuration
+  Severity    Suppressed category-list    Max events
+  ----------  --------------------------  ------------
+  fatal       software                    unlimited
+  notice      none                        1024
+  warning     firmware,asic_hw            10240
+  ```
+
+- Example on a multi ASIC system:
+  ```
+  admin@sonic:~$ show asic-sdk-health-event suppress-configuration
+  asic0:
+  Severity    Suppressed category-list    Max events
+  ----------  --------------------------  ------------
+  notice      none                        1024
+  warning     firmware,asic_hw            10240
+  asic1:
+  Severity    Suppressed category-list    Max events
+  ----------  --------------------------  ------------
+  fatal       software                    unlimited
+  ```
+
+Optionally, you can specify the asic name in order to display the ASIC/SDK health event suppress category list on that particular ASIC on a multi ASIC system
+
+- Example:
+  ```
+  admin@sonic:~$ show asic-sdk-health-event suppress-configuration -n asic1
+  asic1:
+  Severity    Suppressed category-list    Max events
+  ----------  --------------------------  ------------
+  fatal       software                    unlimited
+  ```
+
+### ASIC SDK health event clear commands
+
+**sonic-clear asic-sdk-health-event**
+
+This command clears all the received ASIC/SDK health events.
+
+- Usage:
+  ```
+  sonic-clear asic-sdk-health-event [-n <asicname>]
+  ```
+
+- Details:
+  - sonic-clear asic-sdk-health-event: Clear the ASIC/SDK health events received on all ASICs
+  - sonic-clear asic-sdk-health-event -n asic0: Display all the ASIC/SDK health events received on asic0
+
+
+- Example:
+  ```
+  admin@sonic:~$ sonic-clear asic-sdk-health-event
+  ```
+
+Go Back To [Beginning of the document](#) or [Beginning of this section](#asic-sdk-health-event)
 
 ## ARP & NDP
 
@@ -3846,6 +4007,21 @@ This command sets the number of consecutive polls in which no error is detected 
   admin@sonic:~$ config fabric port monitor poll threshold recovery 5 -n asic0
   ```
 
+**config fabric port monitor state <enable/disable>**
+
+This command sets the monitor state in CONFIG_DB to enable/disable the fabric monitor feature.
+
+- Usage:
+  ```
+  config fabric port monitor state [OPTIONS] <state>
+  ```
+
+- Example:
+  ```
+  admin@sonic:~$ config fabric port monitor state enable
+  admin@sonic:~$ config fabric port monitor state disable
+  ```
+
 ## Feature
 
 SONiC includes a capability in which Feature state can be enabled/disabled
@@ -4981,8 +5157,8 @@ This command displays switchport modes configuration of the interfaces
   ```
 
 
-For details please refer [Switchport Mode HLD](https://github.com/sonic-net/SONiC/pull/912/files#diff-03597c34684d527192f76a6e975792fcfc83f54e20dde63f159399232d148397) to know more about this command.
-
+For details please refer [Switchport Mode HLD](https://github.com/sonic-net/SONiC/pull/912/files#diff-03597c34684d527192f76a6e975792fcfc83f54e20dde63f159399232d148397) to know more about th
+is command.
 
 
 
@@ -6127,6 +6303,86 @@ This command displays the kubernetes server status.
   ```
 Go Back To [Beginning of the document](#) or [Beginning of this section](#Kubernetes)
 
+## LDAP
+
+### show LDAP global commands
+
+This command displays the global LDAP configuration that includes the following parameters: base_dn, bind_password, bind_timeout, version, port, timeout.
+
+- Usage:
+  ```
+  show ldap global
+  ```
+- Example:
+
+  ```
+  admin@sonic:~$ show ldap global
+  		base-dn        Ldap user base dn <string>
+  		bind-dn        LDAP global bind dn <string>
+  		bind-password  Shared secret used for encrypting the communication <password>
+  		bind-timeout   Ldap bind timeout <0-120>
+  		port           TCP port to communicate with LDAP server <1-65535>
+  		timeout        Ldap timeout duration in sec <1-60>
+  		version        Ldap version <1-3>
+
+  ```
+
+### LDAP global config commands
+
+These commands are used to configure the LDAP global parameters
+
+ - Usage:
+  ```
+  config ldap global
+  ```
+- Example:
+  ```
+  admin@sonic:~$ config ldap global
+
+  host 		 <ADDRESS> --prio <1 - 8>
+  base-dn        Ldap user base dn <string>
+  bind-dn        LDAP global bind dn <string>
+  bind-password  Shared secret used for encrypting the communication <password>
+  bind-timeout   Ldap bind timeout <0-120>
+  port           TCP port to communicate with LDAP server <1-65535>
+  timeout        Ldap timeout duration in sec <1-60>
+  version        Ldap version <1-3>
+  ```
+
+### show LDAP server commands
+
+This command displays the global LDAP configuration that includes the following parameters: base_dn, bind_password, bind_timeout, version, port, timeout.
+
+- Usage:
+  ```
+  show ldap-server
+  ```
+- Example:
+
+  ```
+  admin@sonic:~$ show ldap-server
+  		hostname        Ldap hostname or IP of the configured LDAP server
+  		priority        priority for the relevant LDAP server <1-8>
+  ```
+
+### LDAP server config commands
+
+These commands are used to manage the LDAP servers in the system, they are created in correspondance to the global config parameters mentioned earlier.
+
+ - Usage:
+  ```
+  config ldap-server
+  ```
+- Example:
+  ```
+  admin@sonic:~$ config ldap-server
+
+  add 		 Add a new LDAP server <ip> --priority <1-8>
+  delete         Delete an existing LDAP server from the list <ip> --priority <1-8>
+  update         Update and existing LDAP server
+
+Go Back To [Beginning of the document](#) or [Beginning of this section](#LDAP)
+  
 ## Linux Kernel Dump
 
 This section demonstrates the show commands and configuration commands of Linux kernel dump mechanism in SONiC.
@@ -10139,37 +10395,27 @@ This sub-section explains how to configure subinterfaces.
 Go Back To [Beginning of the document](#) or [Beginning of this section](#subinterfaces)
 
 
-
 ## Switchport Modes
-
 ### Switchport Modes Config Commands
-
 This subsection explains how to configure switchport modes on a Port/PortChannel.
-
 **config switchport mode **
-
 Usage:
   ```
   config switchport mode <access|trunk|routed> <member_portname/member_portchannel>
   ```
-
 - Example (Config switchport mode access on "Ethernet0):
   ```
   admin@sonic:~$ sudo config switchport mode access Ethernet0
   ```
-
 - Example (Config switchport mode trunk on "Ethernet4"):
   ```
   admin@sonic:~$ sudo config switchport mode trunk Ethernet4
   ```
-
 - Example (Config switchport mode routed on "Ethernet12"):
   ```
   admin@sonic:~$ sudo config switchport mode routed Ethernet12
-  ```
-
-
-
+  `
+``
 Go Back To [Beginning of the document](#) or [Beginning of this section](#switchport-modes)
 
 
@@ -10219,7 +10465,7 @@ This command displays rate limit configuration for containers.
 
 - Usage
   ```
-  show syslog rate-limit-container [<service_name>]
+  show syslog rate-limit-container [<service_name>] -n [<namespace>]
   ```
 
 - Example:
@@ -10243,6 +10489,37 @@ This command displays rate limit configuration for containers.
   SERVICE         INTERVAL    BURST
   --------------  ----------  -------
   bgp             0           0
+
+  # Multi ASIC
+  show syslog rate-limit-container
+  SERVICE    INTERVAL     BURST
+  --------   ----------   --------
+  bgp        500          N/A
+  snmp       300          20000
+  swss       2000         12000
+  Namespace asic0:
+  SERVICE    INTERVAL     BURST
+  --------   ----------   --------
+  bgp        500          N/A
+  snmp       300          20000
+  swss       2000         12000
+
+  # Multi ASIC
+  show syslog rate-limit-container bgp
+  SERVICE    INTERVAL     BURST
+  --------   ----------   --------
+  bgp        500          5000
+  Namespace asic0:
+  SERVICE    INTERVAL     BURST
+  --------   ----------   --------
+  bgp        500          5000
+
+  # Multi ASIC
+  show syslog rate-limit-container bgp -n asic1
+  Namespace asic1:
+  SERVICE    INTERVAL     BURST
+  --------   ----------   --------
+  bgp        500          5000
   ```
 
 ### Syslog Config Commands
@@ -10321,10 +10598,19 @@ This command is used to configure syslog rate limit for containers.
 - Parameters:
   - _interval_: determines the amount of time that is being measured for rate limiting.
   - _burst_: defines the amount of messages, that have to occur in the time limit of interval, to trigger rate limiting
+  - _namespace_: namespace name or all. Value "default" indicates global namespace.
 
 - Example:
   ```
+  # Config bgp for all namespaces. For multi ASIC platforms, bgp service in all namespaces will be affected.
+  # For single ASIC platforms, bgp service in global namespace will be affected.
   admin@sonic:~$ sudo config syslog rate-limit-container bgp --interval 300 --burst 20000
+
+  # Config bgp for global namespace only.
+  config syslog rate-limit-container bgp --interval 300 --burst 20000 -n default
+
+  # Config bgp for asic0 namespace only.
+  config syslog rate-limit-container bgp --interval 300 --burst 20000 -n asic0
   ```
 
 **config syslog rate-limit-feature enable**
@@ -10333,12 +10619,28 @@ This command is used to enable syslog rate limit feature.
 
 - Usage:
   ```
-  config syslog rate-limit-feature enable
+  config syslog rate-limit-feature enable [<service_name>] -n [<namespace>]
   ```
 
 - Example:
   ```
+  # Enable syslog rate limit for all services in all namespaces
   admin@sonic:~$ sudo config syslog rate-limit-feature enable
+
+  # Enable syslog rate limit for all services in global namespace
+  config syslog rate-limit-feature enable -n default
+
+  # Enable syslog rate limit for all services in asic0 namespace
+  config syslog rate-limit-feature enable -n asic0
+
+  # Enable syslog rate limit for database in all namespaces
+  config syslog rate-limit-feature enable database
+
+  # Enable syslog rate limit for database in default namespace
+  config syslog rate-limit-feature enable database -n default
+
+  # Enable syslog rate limit for database in asci0 namespace
+  config syslog rate-limit-feature enable database -n asci0
   ```
 
 **config syslog rate-limit-feature disable**
@@ -10347,12 +10649,28 @@ This command is used to disable syslog rate limit feature.
 
 - Usage:
   ```
-  config syslog rate-limit-feature disable
+  config syslog rate-limit-feature disable [<service_name>] -n [<namespace>]
   ```
 
 - Example:
   ```
+  # Disable syslog rate limit for all services in all namespaces
   admin@sonic:~$ sudo config syslog rate-limit-feature disable
+
+  # Disable syslog rate limit for all services in global namespace
+  config syslog rate-limit-feature disable -n default
+
+  # Disable syslog rate limit for all services in asic0 namespace
+  config syslog rate-limit-feature disable -n asic0
+
+  # Disable syslog rate limit for database in all namespaces
+  config syslog rate-limit-feature disable database
+
+  # Disable syslog rate limit for database in default namespace
+  config syslog rate-limit-feature disable database -n default
+
+  # Disable syslog rate limit for database in asci0 namespace
+  config syslog rate-limit-feature disable database -n asci0
   ```
 
 Go Back To [Beginning of the document](#) or [Beginning of this section](#syslog)
@@ -10887,28 +11205,19 @@ This command is used to add or delete the vlan.
 
 
 **config vlan add/del -m**
-
 This command is used to add or delete multiple vlans via single command.
-
 - Usage:
   ```
   config vlan (add | del) -m <vlan_id>
   ```
-
 - Example01 (Create the VLAN "Vlan100, Vlan101, Vlan102, Vlan103" if these does not already exist)
-
   ```
   admin@sonic:~$ sudo config vlan add -m 100-103
   ```
-
-
 - Example02 (Create the VLAN "Vlan105, Vlan106, Vlan107, Vlan108" if these does not already exist):
-
   ```
   admin@sonic:~$ sudo config vlan add -m 105,106,107,108
   ```
-
-
 
 **config vlan member add/del**
 
@@ -10931,48 +11240,36 @@ This command is to add or delete a member port into the already created vlan.
   This command will add Ethernet4 as member of the vlan 100.
   ```
 
-
 **config vlan member add/del -m -e**
-
 This command is to add or delete a member port into multiple already created vlans.
-
 - Usage:
   ```
   config vlan member add/del [-m] [-e] <vlan_id> <member_portname>
   ```
-
 *NOTE: -m flag multiple Vlans in range or comma separted list can be added as a member port.*
-
-
 *NOTE: -e is used as an except flag as explained with examples below.*
-
-
 - Example:
   ```
   admin@sonic:~$ sudo config vlan member add -m 100-103 Ethernet0
   This command will add Ethernet0 as member of the vlan 100, vlan 101, vlan 102, vlan 103
    ```
-
    ```
   admin@sonic:~$ sudo config vlan member add -m 100,101,102 Ethernet4
   This command will add Ethernet4 as member of the vlan 100, vlan 101, vlan 102
    ```
-
    ```
   admin@sonic:~$ sudo config vlan member add -e -m 104,105 Ethernet8
   Suppose vlan 100, vlan 101, vlan 102, vlan 103, vlan 104, vlan 105 are exisiting vlans. This command will add Ethernet8 as member of  vlan 100, vlan 101, vlan 102, vlan 103
   ```
-
   ```
   admin@sonic:~$ sudo config vlan member add -e 100 Ethernet12
   Suppose vlan 100, vlan 101, vlan 102, vlan 103, vlan 104, vlan 105 are exisiting vlans. This command will add Ethernet12 as member of vlan 101, vlan 102, vlan 103, vlan 104, vlan 105
   ```
-
    ```
   admin@sonic:~$ sudo config vlan member add all Ethernet20
-  Suppose vlan 100, vlan 101, vlan 102, vlan 103, vlan 104, vlan 105 are exisiting vlans. This command will add Ethernet20 as member of vlan 100, vlan 101, vlan 102, vlan 103, vlan 104, vlan 105
+  Suppose vlan 100, vlan 101, vlan 102, vlan 103, vlan 104, vlan 105 are exisiting vlans. This command will add Ethernet20 as member of vlan 100, vlan 101, vlan 102, vlan 103, vlan 104, vlan 1
+05
   ```
-
 
 **config proxy_arp enabled/disabled**
 

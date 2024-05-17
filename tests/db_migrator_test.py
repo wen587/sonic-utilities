@@ -4,8 +4,9 @@ import sys
 import argparse
 from unittest import mock
 from deepdiff import DeepDiff
+import json
 
-from swsscommon.swsscommon import SonicV2Connector
+from swsscommon.swsscommon import SonicV2Connector, SonicDBConfig
 from sonic_py_common import device_info
 
 from .mock_tables import dbconnector
@@ -156,6 +157,7 @@ class TestMellanoxBufferMigrator(object):
                              ['empty-config',
                               'empty-config-with-device-info-generic',
                               'empty-config-with-device-info-traditional',
+                              'empty-config-with-device-info-nvidia',
                               'non-default-config',
                               'non-default-xoff',
                               'non-default-lossless-profile-in-pg',
@@ -308,33 +310,6 @@ class TestAutoNegMigrator(object):
 
         assert dbmgtr.configDB.get_table('PORT') == expected_db.cfgdb.get_table('PORT')
         assert dbmgtr.configDB.get_table('VERSIONS') == expected_db.cfgdb.get_table('VERSIONS')
-
-
-
-class TestSwitchPortMigrator(object):
-    @classmethod
-    def setup_class(cls):
-        os.environ['UTILITIES_UNIT_TESTING'] = "2"
-
-    @classmethod
-    def teardown_class(cls):
-        os.environ['UTILITIES_UNIT_TESTING'] = "0"
-        dbconnector.dedicated_dbs['CONFIG_DB'] = None
-
-    def test_switchport_mode_migrator(self):
-        dbconnector.dedicated_dbs['CONFIG_DB'] = os.path.join(mock_db_path, 'config_db', 'switchport-input')
-        import db_migrator
-        dbmgtr = db_migrator.DBMigrator(None)
-        dbmgtr.migrate()
-
-        dbconnector.dedicated_dbs['CONFIG_DB'] = os.path.join(mock_db_path, 'config_db', 'switchport-expected')
-        expected_db = Db()
-        advance_version_for_expected_database(dbmgtr.configDB, expected_db.cfgdb, 'version_3_0_1')
-
-        assert dbmgtr.configDB.get_table('PORT') == expected_db.cfgdb.get_table('PORT')
-        assert dbmgtr.configDB.get_table('PORTCHANNEL') == expected_db.cfgdb.get_table('PORTCHANNEL')
-        assert dbmgtr.configDB.get_table('VERSIONS') == expected_db.cfgdb.get_table('VERSIONS')
-
 
 class TestInitConfigMigrator(object):
     @classmethod
@@ -901,7 +876,6 @@ class TestGoldenConfigInvalid(object):
         # hostname is from minigraph.xml
         assert hostname == 'SONiC-Dummy'
 
-
 class TestMain(object):
     @classmethod
     def setup_class(cls):
@@ -914,6 +888,22 @@ class TestMain(object):
     @mock.patch('argparse.ArgumentParser.parse_args')
     def test_init(self, mock_args):
         mock_args.return_value=argparse.Namespace(namespace=None, operation='get_version', socket=None)
+        import db_migrator
+        db_migrator.main()
+
+    @mock.patch('argparse.ArgumentParser.parse_args')
+    @mock.patch('swsscommon.swsscommon.SonicDBConfig.isInit', mock.MagicMock(return_value=False))
+    @mock.patch('swsscommon.swsscommon.SonicDBConfig.initialize', mock.MagicMock())
+    def test_init_no_namespace(self, mock_args):
+        mock_args.return_value=argparse.Namespace(namespace=None, operation='version_202405_01', socket=None)
+        import db_migrator
+        db_migrator.main()
+
+    @mock.patch('argparse.ArgumentParser.parse_args')
+    @mock.patch('swsscommon.swsscommon.SonicDBConfig.isGlobalInit', mock.MagicMock(return_value=False))
+    @mock.patch('swsscommon.swsscommon.SonicDBConfig.initializeGlobalConfig', mock.MagicMock())
+    def test_init_namespace(self, mock_args):
+        mock_args.return_value=argparse.Namespace(namespace="asic0", operation='version_202405_01', socket=None)
         import db_migrator
         db_migrator.main()
 
@@ -969,6 +959,54 @@ class TestGNMIMigrator(object):
         advance_version_for_expected_database(dbmgtr.configDB, expected_db.cfgdb, 'version_202405_01')
         resulting_table = dbmgtr.configDB.get_table("GNMI")
         expected_table = expected_db.cfgdb.get_table("GNMI")
+
+        diff = DeepDiff(resulting_table, expected_table, ignore_order=True)
+        assert not diff
+
+class TestAAAMigrator(object):
+    @classmethod
+    def setup_class(cls):
+        os.environ['UTILITIES_UNIT_TESTING'] = "2"
+
+    @classmethod
+    def teardown_class(cls):
+        os.environ['UTILITIES_UNIT_TESTING'] = "0"
+        dbconnector.dedicated_dbs['CONFIG_DB'] = None
+
+    def load_golden_config(self, dbmgtr, test_json):
+        dbmgtr.config_src_data = {}
+
+        json_path = os.path.join(mock_db_path, 'config_db', test_json + ".json")
+        if os.path.exists(json_path):
+            with open(json_path) as f:
+                dbmgtr.config_src_data = json.load(f)
+                print("test_per_command_aaa load golden config success, config_src_data: {}".format(dbmgtr.config_src_data))
+        else:
+            print("test_per_command_aaa load golden config failed, file {} does not exist.".format(test_json))
+
+
+    @pytest.mark.parametrize('test_json', ['per_command_aaa_enable',
+                                           'per_command_aaa_no_passkey',
+                                           'per_command_aaa_disable',
+                                           'per_command_aaa_no_change',
+                                           'per_command_aaa_no_tacplus',
+                                           'per_command_aaa_no_authentication'])
+    def test_per_command_aaa(self, test_json):
+        dbconnector.dedicated_dbs['CONFIG_DB'] = os.path.join(mock_db_path, 'config_db', test_json)
+        import db_migrator
+        dbmgtr = db_migrator.DBMigrator(None)
+        self.load_golden_config(dbmgtr, test_json + '_golden')
+        dbmgtr.migrate_tacplus()
+        dbmgtr.migrate_aaa()
+        resulting_table = dbmgtr.configDB.get_table("AAA")
+
+        dbconnector.dedicated_dbs['CONFIG_DB'] = os.path.join(mock_db_path, 'config_db', test_json + '_expected')
+        expected_db = Db()
+        expected_table = expected_db.cfgdb.get_table("AAA")
+
+        print("test_per_command_aaa: {}".format(test_json))
+        print("test_per_command_aaa, resulting_table: {}".format(resulting_table))
+        print("test_per_command_aaa, expected_table: {}".format(expected_table))
 
         diff = DeepDiff(resulting_table, expected_table, ignore_order=True)
         assert not diff

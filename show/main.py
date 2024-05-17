@@ -1438,11 +1438,11 @@ def all(verbose):
         for ns in ns_list:
             ns_config = get_config_json_by_namespace(ns)
             if bgp_util.is_bgp_feature_state_enabled(ns):
-                ns_config['bgpraw'] = bgp_util.run_bgp_show_command(bgpraw_cmd, ns)
+                ns_config['bgpraw'] = bgp_util.run_bgp_show_command(bgpraw_cmd, ns, exit_on_fail=False)
             output[ns] = ns_config
         click.echo(json.dumps(output, indent=4))
     else:
-        host_config['bgpraw'] = bgp_util.run_bgp_show_command(bgpraw_cmd)
+        host_config['bgpraw'] = bgp_util.run_bgp_show_command(bgpraw_cmd, exit_on_fail=False)
         click.echo(json.dumps(output['localhost'], indent=4))
 
 
@@ -2155,6 +2155,103 @@ def suppress_pending_fib(db):
     field_values = db.cfgdb.get_entry('DEVICE_METADATA', 'localhost')
     state = field_values.get('suppress-fib-pending', 'disabled').title()
     click.echo(state)
+
+
+# asic-sdk-health-event subcommand ("show asic-sdk-health-event")
+@cli.group(cls=clicommon.AliasedGroup)
+def asic_sdk_health_event():
+    """"""
+    pass
+
+
+@asic_sdk_health_event.command()
+@clicommon.pass_db
+@click.option('--namespace', '-n', 'namespace', default=None, show_default=True,
+              type=click.Choice(multi_asic_util.multi_asic_ns_choices()), help='Namespace name or all')
+def suppress_configuration(db, namespace):
+    """ Show the suppress configuration """
+    if multi_asic.get_num_asics() > 1:
+        namespace_list = multi_asic.get_namespaces_from_linux()
+        masic = True
+    else:
+        namespace_list = [multi_asic.DEFAULT_NAMESPACE]
+        masic = False
+
+    header = ['Severity', 'Suppressed category-list', "Max events"]
+    body = []
+
+    supported = False
+
+    for ns in namespace_list:
+        if namespace and namespace != ns:
+            continue
+
+        state_db = db.db_clients[ns]
+        if "true" != state_db.get(db.db.STATE_DB, "SWITCH_CAPABILITY|switch", "ASIC_SDK_HEALTH_EVENT"):
+            continue
+
+        supported = True
+
+        if masic:
+            click.echo("{}:".format(ns));
+
+        config_db = db.cfgdb_clients[ns]
+        suppressSeverities = config_db.get_table('SUPPRESS_ASIC_SDK_HEALTH_EVENT')
+
+        for severity in natsorted(suppressSeverities):
+            body.append([severity,
+                         ','.join(suppressSeverities[severity].get('categories', ['none'])),
+                         suppressSeverities[severity].get('max_events', 'unlimited')])
+
+        click.echo(tabulate(body, header))
+
+    if not supported:
+        ctx = click.get_current_context()
+        ctx.fail("ASIC/SDK health event is not supported on the platform")
+
+
+@asic_sdk_health_event.command()
+@clicommon.pass_db
+@click.option('--namespace', '-n', 'namespace', default=None, show_default=True,
+              type=click.Choice(multi_asic_util.multi_asic_ns_choices()), help='Namespace name or all')
+def received(db, namespace):
+    """ Show the received ASIC/SDK health event """
+    if multi_asic.get_num_asics() > 1:
+        namespace_list = multi_asic.get_namespaces_from_linux()
+        masic = True
+    else:
+        namespace_list = [multi_asic.DEFAULT_NAMESPACE]
+        masic = False
+
+    header = ['Date', 'Severity', 'Category', 'Description']
+    body = []
+
+    supported = False
+
+    for ns in namespace_list:
+        if namespace and namespace != ns:
+            continue
+
+        state_db = db.db_clients[ns]
+        if "true" != state_db.get(db.db.STATE_DB, "SWITCH_CAPABILITY|switch", "ASIC_SDK_HEALTH_EVENT"):
+            continue
+
+        supported = True
+
+        if masic:
+            click.echo("{}:".format(ns));
+
+        event_keys = state_db.keys(db.db.STATE_DB, "ASIC_SDK_HEALTH_EVENT_TABLE|*")
+
+        for key in natsorted(event_keys):
+            event = state_db.get_all(state_db.STATE_DB, key)
+            body.append([key.split('|')[1], event.get('severity'), event.get('category'), event.get('description')])
+
+        click.echo(tabulate(body, header))
+
+    if not supported:
+        ctx = click.get_current_context()
+        ctx.fail("ASIC/SDK health event is not supported on the platform")
 
 
 # Load plugins and register them
