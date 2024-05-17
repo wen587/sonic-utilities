@@ -1158,6 +1158,7 @@ def validate_gre_type(ctx, _, value):
     except ValueError:
         raise click.UsageError("{} is not a valid GRE type".format(value))
 
+
 def multi_asic_save_config(db, filename):
     """A function to save all asic's config to single file
     """
