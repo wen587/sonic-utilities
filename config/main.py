@@ -31,7 +31,7 @@ from sonic_py_common.interface import get_interface_table_name, get_port_table_n
 from sonic_yang_cfg_generator import SonicYangCfgDbGenerator
 from utilities_common import util_base
 from swsscommon import swsscommon
-from swsscommon.swsscommon import SonicV2Connector, ConfigDBConnector, SonicDBConfig, ConfigDBPipeConnector
+from swsscommon.swsscommon import SonicV2Connector, ConfigDBConnector, ConfigDBPipeConnector
 from utilities_common.db import Db
 from utilities_common.intf_filter import parse_interface_in_filter
 from utilities_common import bgp_util
@@ -1243,7 +1243,7 @@ def load_sysinfo_if_missing(asic_config):
         get(HOST_NAMESPACE, {}).get("mac")
     if not platform or not mac:
         log.log_warning("Input file does't have platform or mac. platform: {}, mac: {}"
-            .format(None if platform is None else platform, None if mac is None else mac))
+                        .format(None if platform is None else platform, None if mac is None else mac))
         return True
     return False
 
@@ -1262,9 +1262,9 @@ def flush_configdb(namespace=DEFAULT_NAMESPACE):
 
 def migrate_db_to_lastest(namespace=DEFAULT_NAMESPACE):
     # Migrate DB contents to latest version
-    db_migrator='/usr/local/bin/db_migrator.py'
+    db_migrator = '/usr/local/bin/db_migrator.py'
     if os.path.isfile(db_migrator) and os.access(db_migrator, os.X_OK):
-        if not namespace:
+        if namespace is DEFAULT_NAMESPACE:
             command = [db_migrator, '-o', 'migrate']
         else:
             command = [db_migrator, '-o', 'migrate', '-n', str(namespace)]
@@ -1286,7 +1286,6 @@ def multiasic_write_to_db(filename, load_sysinfo):
             if not cfg_hwsku:
                 click.secho("Could not get the HWSKU from config file,  Exiting!!!", fg='magenta')
                 sys.exit(1)
-
 
         client, _ = flush_configdb(ns)
 
@@ -1765,7 +1764,6 @@ def reload(db, filename, yes, load_sysinfo, no_service_restart, force, file_form
                 else:
                     file = DEFAULT_CONFIG_YANG_FILE
 
-
             # Check the file exists before proceeding.
             if not os.path.exists(file):
                 click.echo("The config file {} doesn't exist".format(file))
@@ -1799,15 +1797,16 @@ def reload(db, filename, yes, load_sysinfo, no_service_restart, force, file_form
 
             if load_sysinfo:
                 if namespace is DEFAULT_NAMESPACE:
-                    command = [str(SONIC_CFGGEN_PATH), '-H', '-k', str(cfg_hwsku), '--write-to-db']
+                    command = [
+                        str(SONIC_CFGGEN_PATH), '-H', '-k', str(cfg_hwsku), '--write-to-db']
                 else:
-                    command = [str(SONIC_CFGGEN_PATH), '-H', '-k', str(cfg_hwsku), '-n', str(namespace), '--write-to-db']
+                    command = [
+                        str(SONIC_CFGGEN_PATH), '-H', '-k', str(cfg_hwsku), '-n', str(namespace), '--write-to-db']
                 clicommon.run_command(command, display_cmd=True)
 
             # For the database service running in linux host we use the file user gives as input
             # or by default DEFAULT_CONFIG_DB_FILE. In the case of database service running in namespace,
             # the default config_db<namespaceID>.json format is used.
-
 
             config_gen_opts = []
 
