@@ -1228,7 +1228,7 @@ def validate_patch(patch):
 
 
 def multiasic_validate_single_file(filename):
-    ns_list = multi_asic.get_namespace_list()
+    ns_list = [DEFAULT_NAMESPACE, *multi_asic.get_namespace_list()]
     file_input = read_json_file(filename)
     file_ns_list = [DEFAULT_NAMESPACE if key == HOST_NAMESPACE else key for key in file_input]
     if set(ns_list) != set(file_ns_list):
@@ -1273,14 +1273,15 @@ def migrate_db_to_lastest(namespace=DEFAULT_NAMESPACE):
 
 def multiasic_write_to_db(filename, load_sysinfo):
     file_input = read_json_file(filename)
-    for ns in multi_asic.get_namespace_list():
+    for ns in [DEFAULT_NAMESPACE, *multi_asic.get_namespace_list()]:
         asic_name = HOST_NAMESPACE if ns == DEFAULT_NAMESPACE else ns
         asic_config = file_input[asic_name]
 
-        if not load_sysinfo:
-            load_sysinfo = load_sysinfo_if_missing(asic_config)
+        asic_load_sysinfo = True if load_sysinfo else False
+        if not asic_load_sysinfo:
+            asic_load_sysinfo = load_sysinfo_if_missing(asic_config)
 
-        if load_sysinfo:
+        if asic_load_sysinfo:
             cfg_hwsku = asic_config.get("DEVICE_METADATA", {}).\
                 get(HOST_NAMESPACE, {}).get("hwsku")
             if not cfg_hwsku:
@@ -1289,7 +1290,7 @@ def multiasic_write_to_db(filename, load_sysinfo):
 
         client, _ = flush_configdb(ns)
 
-        if load_sysinfo:
+        if asic_load_sysinfo:
             if ns is DEFAULT_NAMESPACE:
                 command = [str(SONIC_CFGGEN_PATH), '-H', '-k', str(cfg_hwsku), '--write-to-db']
             else:
@@ -4116,6 +4117,7 @@ def del_user(db, user):
 def bgp():
     """BGP-related configuration tasks"""
     pass
+
 
 #
 # 'shutdown' subgroup ('config bgp shutdown ...')
