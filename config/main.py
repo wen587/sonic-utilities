@@ -1232,7 +1232,8 @@ def multiasic_validate_single_file(filename):
     file_input = read_json_file(filename)
     file_ns_list = [DEFAULT_NAMESPACE if key == HOST_NAMESPACE else key for key in file_input]
     if set(ns_list) != set(file_ns_list):
-        click.echo("Input file {} must contain all asics config".format(filename))
+        diff = set(ns_list) - set(file_ns_list)
+        click.echo("Input file {} must contain all asics config. Missing {}".format(filename, diff))
         raise click.Abort()
 
 
@@ -1267,7 +1268,7 @@ def migrate_db_to_lastest(namespace=DEFAULT_NAMESPACE):
         if namespace is DEFAULT_NAMESPACE:
             command = [db_migrator, '-o', 'migrate']
         else:
-            command = [db_migrator, '-o', 'migrate', '-n', str(namespace)]
+            command = [db_migrator, '-o', 'migrate', '-n', namespace]
         clicommon.run_command(command, display_cmd=True)
 
 
