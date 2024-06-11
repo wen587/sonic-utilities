@@ -1233,19 +1233,22 @@ def multiasic_validate_single_file(filename):
     file_input = read_json_file(filename)
     file_ns_list = [DEFAULT_NAMESPACE if key == HOST_NAMESPACE else key for key in file_input]
     if set(ns_list) != set(file_ns_list):
-        diff = set(ns_list) - set(file_ns_list)
-        click.echo("Input file {} must contain all asics config. Missing {}".format(filename, diff))
+        click.echo(
+            "Input file {} must contain all asics config. ns_list: {} file ns_list: {}".format(
+                filename, ns_list, file_ns_list)
+        )
         raise click.Abort()
 
 
 def load_sysinfo_if_missing(asic_config):
-    platform = asic_config.get("DEVICE_METADATA", {}).\
-        get(HOST_NAMESPACE, {}).get("platform")
-    mac = asic_config.get("DEVICE_METADATA", {}).\
-        get(HOST_NAMESPACE, {}).get("mac")
+    device_metadata = asic_config.get('DEVICE_METADATA', {})
+    platform = device_metadata.get("localhost", {}).get("platform")
+    mac = device_metadata.get("localhost", {}).get("mac")
     if not platform or not mac:
-        log.log_warning("Input file does't have platform or mac. platform: {}, mac: {}"
-                        .format(None if platform is None else platform, None if mac is None else mac))
+        if not platform:
+            log.log_warning("platfrom is missing from Input file")
+        if not mac:
+            log.log_warning("mac is missing from Input file")
         return True
     return False
 
@@ -1285,7 +1288,7 @@ def multiasic_write_to_db(filename, load_sysinfo):
 
         if asic_load_sysinfo:
             cfg_hwsku = asic_config.get("DEVICE_METADATA", {}).\
-                get(HOST_NAMESPACE, {}).get("hwsku")
+                get("localhost", {}).get("hwsku")
             if not cfg_hwsku:
                 click.secho("Could not get the HWSKU from config file,  Exiting!!!", fg='magenta')
                 sys.exit(1)
