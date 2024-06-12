@@ -1244,13 +1244,14 @@ def load_sysinfo_if_missing(asic_config):
     device_metadata = asic_config.get('DEVICE_METADATA', {})
     platform = device_metadata.get("localhost", {}).get("platform")
     mac = device_metadata.get("localhost", {}).get("mac")
-    if not platform or not mac:
-        if not platform:
-            log.log_warning("platfrom is missing from Input file")
-        if not mac:
-            log.log_warning("mac is missing from Input file")
+    if not platform:
+        log.log_warning("platform is missing from Input file")
         return True
-    return False
+    elif not mac:
+        log.log_warning("mac is missing from Input file")
+        return True
+    else:
+        return False
 
 
 def flush_configdb(namespace=DEFAULT_NAMESPACE):
@@ -1290,7 +1291,7 @@ def multiasic_write_to_db(filename, load_sysinfo):
             cfg_hwsku = asic_config.get("DEVICE_METADATA", {}).\
                 get("localhost", {}).get("hwsku")
             if not cfg_hwsku:
-                click.secho("Could not get the HWSKU from config file,  Exiting!!!", fg='magenta')
+                click.secho("Could not get the HWSKU from config file,  Exiting!", fg='magenta')
                 sys.exit(1)
 
         client, _ = flush_configdb(ns)
