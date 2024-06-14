@@ -762,8 +762,10 @@ class TestLoadMinigraph(object):
     def test_load_minigraph_with_specified_golden_config_path(self, get_cmd_module):
         def is_file_side_effect(filename):
             return True if 'golden_config' in filename else False
+
         def read_json_file_side_effect(filename):
             return {}
+
         with mock.patch("utilities_common.cli.run_command", mock.MagicMock(side_effect=mock_run_command_side_effect)) as mock_run_command, \
                 mock.patch('os.path.isfile', mock.MagicMock(side_effect=is_file_side_effect)), \
                 mock.patch('config.main.read_json_file', mock.MagicMock(side_effect=read_json_file_side_effect)):
@@ -777,8 +779,10 @@ class TestLoadMinigraph(object):
     def test_load_minigraph_with_default_golden_config_path(self, get_cmd_module):
         def is_file_side_effect(filename):
             return True if 'golden_config' in filename else False
+
         def read_json_file_side_effect(filename):
             return {}
+
         with mock.patch("utilities_common.cli.run_command", mock.MagicMock(side_effect=mock_run_command_side_effect)) as mock_run_command, \
                 mock.patch('os.path.isfile', mock.MagicMock(side_effect=is_file_side_effect)), \
                 mock.patch('config.main.read_json_file', mock.MagicMock(side_effect=read_json_file_side_effect)):
@@ -805,8 +809,10 @@ class TestLoadMinigraph(object):
         with mock.patch("utilities_common.cli.run_command", mock.MagicMock(side_effect=mock_run_command_side_effect)) as mock_run_command:
             def is_file_side_effect(filename):
                 return True if 'golden_config' in filename else False
+
             def read_json_file_side_effect(filename):
                 return {}
+
             with mock.patch('os.path.isfile', mock.MagicMock(side_effect=is_file_side_effect)), \
                     mock.patch('config.main.read_json_file', mock.MagicMock(side_effect=read_json_file_side_effect)):
                 (config, show) = get_cmd_module
