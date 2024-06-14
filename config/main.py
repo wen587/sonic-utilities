@@ -1844,8 +1844,10 @@ def load_minigraph(db, no_service_restart, traffic_shift_away, override_config, 
         # Dependency check golden config json
         config_to_check = read_json_file(golden_config_path)
         if multi_asic.is_multi_asic():
-            config_to_check = config_to_check.get('localhost', {})
-        table_hard_dependency_check(config_to_check)
+            host_config = config_to_check.get('localhost', {})
+        else:
+            host_config = config_to_check
+        table_hard_dependency_check(host_config)
 
     #Stop services before config push
     if not no_service_restart:
