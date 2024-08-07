@@ -345,8 +345,8 @@ class TestConfigWrapper(unittest.TestCase):
 
     def test_validate_lanes__valid_lanes_0_multi_ports__success(self):
         config = {"PORT": {
-            "Ethernet0": {"lanes": "0,64,65", "speed":"10000"},
-            "Ethernet1": {"lanes": "0,66,68", "speed":"10000"},
+            "Ethernet0": {"lanes": "0,64,65", "speed": "10000"},
+            "Ethernet1": {"lanes": "0,66,68", "speed": "10000"},
             }}
         self.validate_lanes(config)
 
