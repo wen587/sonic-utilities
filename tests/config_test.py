@@ -1032,7 +1032,6 @@ class TestLoadMinigraph(object):
                 },
                 "TACPLUS": {
                     "global": {
-                        "passkey": ""
                     }
                 }
             }
@@ -1044,7 +1043,7 @@ class TestLoadMinigraph(object):
             runner = CliRunner()
             result = runner.invoke(config.config.commands["load_minigraph"], ["--override_config", "-y"])
             assert result.exit_code != 0
-            assert "Authentication with 'tacacs+' is not allowed when passkey not exits." in result.output
+            assert "Authentication with 'tacacs+' is not allowed when passkey not exists." in result.output
 
     @mock.patch('sonic_py_common.device_info.get_paths_to_platform_and_hwsku_dirs', mock.MagicMock(return_value=("dummy_path", None)))
     def test_load_minigraph_with_traffic_shift_away(self, get_cmd_module):
