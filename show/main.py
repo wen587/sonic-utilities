@@ -2008,10 +2008,13 @@ def policer(policer_name, verbose):
 # 'ecn' command ("show ecn")
 #
 @cli.command('ecn')
+@multi_asic_util.multi_asic_click_option_namespace
 @click.option('--verbose', is_flag=True, help="Enable verbose output")
-def ecn(verbose):
+def ecn(namespace, verbose):
     """Show ECN configuration"""
     cmd = ['ecnconfig', '-l']
+    if namespace is not None:
+        cmd += ['-n', str(namespace)]
     run_command(cmd, display_cmd=verbose)
 
 
@@ -2154,6 +2157,17 @@ def peer(db, peer_ip):
                                 values.get("tx_interval"), values.get("rx_interval"), values.get("multiplier"), values.get("multihop"), values.get("local_discriminator")])
 
     click.echo(tabulate(bfd_body, bfd_headers))
+
+
+# 'suppress-fib-pending' subcommand ("show suppress-fib-pending")
+@cli.command('suppress-fib-pending')
+@clicommon.pass_db
+def suppress_pending_fib(db):
+    """ Show the status of suppress pending FIB feature """
+
+    field_values = db.cfgdb.get_entry('DEVICE_METADATA', 'localhost')
+    state = field_values.get('suppress-fib-pending', 'disabled').title()
+    click.echo(state)
 
 
 # asic-sdk-health-event subcommand ("show asic-sdk-health-event")
