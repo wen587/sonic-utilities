@@ -1810,6 +1810,22 @@ def reload(db, filename, yes, load_sysinfo, no_service_restart, force, file_form
             click.echo("Input {} config file(s) separated by comma for multiple files ".format(num_cfg_file))
             return
 
+    if filename is not None:
+        if multi_asic.is_multi_asic():
+            # Multiasic has not 100% fully validated. Thus pass here.
+            pass
+        else:
+            config_to_check = read_json_file(filename)
+            sy = sonic_yang.SonicYang(YANG_DIR)
+            sy.loadYangModel()
+            try:
+                sy.loadData(configdbJson=config_to_check)
+                sy.validate_data_tree()
+            except sonic_yang.SonicYangException as e:
+                click.secho("{} fails YANG validation! Error: {}".format(filename, str(e)),
+                            fg='magenta')
+                raise click.Abort()
+
     #Stop services before config push
     if not no_service_restart:
         log.log_notice("'reload' stopping services...")
