@@ -1372,6 +1372,19 @@ def multiasic_write_to_db(filename, load_sysinfo):
         migrate_db_to_lastest(ns)
 
 
+def config_file_yang_validation(filename):
+    config_to_check = read_json_file(filename)
+    sy = sonic_yang.SonicYang(YANG_DIR)
+    sy.loadYangModel()
+    try:
+        sy.loadData(configdbJson=config_to_check)
+        sy.validate_data_tree()
+    except sonic_yang.SonicYangException as e:
+        click.secho("{} fails YANG validation! Error: {}".format(filename, str(e)),
+                    fg='magenta')
+        raise click.Abort()
+
+
 # This is our main entrypoint - the main 'config' command
 @click.group(cls=clicommon.AbbreviationGroup, context_settings=CONTEXT_SETTINGS)
 @click.pass_context
@@ -1815,16 +1828,7 @@ def reload(db, filename, yes, load_sysinfo, no_service_restart, force, file_form
             # Multiasic has not 100% fully validated. Thus pass here.
             pass
         else:
-            config_to_check = read_json_file(filename)
-            sy = sonic_yang.SonicYang(YANG_DIR)
-            sy.loadYangModel()
-            try:
-                sy.loadData(configdbJson=config_to_check)
-                sy.validate_data_tree()
-            except sonic_yang.SonicYangException as e:
-                click.secho("{} fails YANG validation! Error: {}".format(filename, str(e)),
-                            fg='magenta')
-                raise click.Abort()
+            config_file_yang_validation(filename):
 
     #Stop services before config push
     if not no_service_restart:
@@ -2016,15 +2020,7 @@ def load_minigraph(db, no_service_restart, traffic_shift_away, override_config, 
             # Multiasic has not 100% fully validated. Thus pass here.
             pass
         else:
-            sy = sonic_yang.SonicYang(YANG_DIR)
-            sy.loadYangModel()
-            try:
-                sy.loadData(configdbJson=config_to_check)
-                sy.validate_data_tree()
-            except sonic_yang.SonicYangException as e:
-                click.secho("{} fails YANG validation! Error: {}".format(golden_config_path, str(e)),
-                            fg='magenta')
-                raise click.Abort()
+            config_file_yang_validation(golden_config_path)
 
         # Dependency check golden config json
         if multi_asic.is_multi_asic():
