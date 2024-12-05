@@ -1374,7 +1374,7 @@ def multiasic_write_to_db(filename, load_sysinfo):
 
 def config_file_yang_validation(filename):
     config_to_check = read_json_file(filename)
-    sy = sonic_yang.SonicYang(YANG_DIR, print_log_enabled=False)
+    sy = sonic_yang.SonicYang(YANG_DIR)
     sy.loadYangModel()
     try:
         sy.loadData(configdbJson=config_to_check)
@@ -1830,7 +1830,7 @@ def reload(db, filename, yes, load_sysinfo, no_service_restart, force, file_form
         if multi_asic.is_multi_asic():
             # Multiasic has not 100% fully validated. Thus pass here.
             pass
-        else:
+        elif "golden" in filename.lower():
             config_file_yang_validation(filename)
 
     #Stop services before config push
