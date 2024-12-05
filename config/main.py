@@ -1374,7 +1374,7 @@ def multiasic_write_to_db(filename, load_sysinfo):
 
 def config_file_yang_validation(filename):
     config_to_check = read_json_file(filename)
-    sy = sonic_yang.SonicYang(YANG_DIR)
+    sy = sonic_yang.SonicYang(YANG_DIR, print_log_enabled=False)
     sy.loadYangModel()
     try:
         sy.loadData(configdbJson=config_to_check)
