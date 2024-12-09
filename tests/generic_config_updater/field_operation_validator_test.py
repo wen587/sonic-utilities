@@ -187,6 +187,34 @@ class TestValidateFieldOperation(unittest.TestCase):
         }
         config_wrapper = gu_common.ConfigWrapper()
         self.assertRaises(gu_common.IllegalPatchOperationError, config_wrapper.validate_field_operation, old_config, target_config)
+    
+    def test_validate_field_operation_illegal__dataacl_table_type_and_rule(self):
+        old_config = {
+            "ACL_TABLE": {
+                "OPENAI_INGRESS": {
+                    "type": "L2"
+                }
+            },
+            "ACL_RULE": {
+                "OPENAI_INGRESS|RULE_1": {
+                    "ETHER_TYPE": "2048"
+                }
+            }
+        }
+        target_config = {
+            "ACL_TABLE": {
+                "OPENAI_INGRESS": {
+                    "type": "L3V6"
+                }
+            },
+            "ACL_RULE": {
+                "OPENAI_INGRESS|RULE_1": {
+                    "IP_TYPE": "IPV6ANY"
+                }
+            }
+        }
+        config_wrapper = gu_common.ConfigWrapper()
+        self.assertRaises(gu_common.IllegalPatchOperationError, config_wrapper.validate_field_operation, old_config, target_config)
 
 class TestGetAsicName(unittest.TestCase):
 
