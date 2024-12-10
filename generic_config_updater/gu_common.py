@@ -227,9 +227,9 @@ class ConfigWrapper:
 
         # Pick data acl table with "type" field
         old_dacl_table = [table for table, fields in old_acl_table.items()
-                         if fields.get("type") and fields["type"] != "CTRLPLANE"]
+                          if fields.get("type") and fields["type"] != "CTRLPLANE"]
         upd_dacl_table = [table for table, fields in upd_acl_table.items()
-                         if fields.get("type") and fields["type"] != "CTRLPLANE"]
+                          if fields.get("type") and fields["type"] != "CTRLPLANE"]
 
         # Pick intersect common tables that "type" being replaced
         common_dacl_table = set(old_dacl_table).intersection(set(upd_dacl_table))
@@ -244,9 +244,9 @@ class ConfigWrapper:
 
         # Pick rules with its dependent table which has "type" replaced
         old_dacl_rule = [rule for rule in old_acl_rule
-                        if rule.split("|")[0] in modified_common_dacl_table]
+                         if rule.split("|")[0] in modified_common_dacl_table]
         upd_dacl_rule = [rule for rule in upd_acl_rule
-                        if rule.split("|")[0] in modified_common_dacl_table]
+                         if rule.split("|")[0] in modified_common_dacl_table]
 
         # Block changes if acl rule change on tables with "type" replaced
         for key in set(old_dacl_rule).union(set(upd_dacl_rule)):
