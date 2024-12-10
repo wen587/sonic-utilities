@@ -215,40 +215,47 @@ class ConfigWrapper:
                     raise IllegalPatchOperationError("Modification of {} table is illegal- validating function {} returned False".format(table, function))
 
     def illegal_dataacl_check(self, old_config, upd_config):
-        # Block data ACL changes when patch includes:
-        # 1. table "type" being replaced
-        # 2. rule update on tables with table "type" replaced
-        # This will cause rase condition when swss consume the change
-        # and make acl rule inactive
-        old_acltable = old_config.get("ACL_TABLE", {})
-        upd_acltable = upd_config.get("ACL_TABLE", {})
+        '''
+        Block data ACL changes when patch includes:
+        1. table "type" being replaced
+        2. rule update on tables with table "type" replaced
+        This will cause race condition when swss consume the change of
+        acl table and acl rule and make the changed acl rule inactive
+        '''
+        old_acl_table = old_config.get("ACL_TABLE", {})
+        upd_acl_table = upd_config.get("ACL_TABLE", {})
 
         # Pick data acl table with "type" field
-        old_dacltable = [table for table, fields in old_acltable.items()
+        old_dacl_table = [table for table, fields in old_acl_table.items()
                          if fields.get("type") and fields["type"] != "CTRLPLANE"]
-        upd_dacltable = [table for table, fields in upd_acltable.items()
+        upd_dacl_table = [table for table, fields in upd_acl_table.items()
                          if fields.get("type") and fields["type"] != "CTRLPLANE"]
 
-        # Pick intersect tables that "type" being replaced
-        common_dacltable = set(old_dacltable).intersection(set(upd_dacltable))
-        modified_common_dacltable = [
-            table for table in common_dacltable
-            if old_acltable[table]["type"] != upd_acltable[table]["type"]
+        # Pick intersect common tables that "type" being replaced
+        common_dacl_table = set(old_dacl_table).intersection(set(upd_dacl_table))
+        # Identify tables from the intersection where the "type" field differs
+        modified_common_dacl_table = [
+            table for table in common_dacl_table
+            if old_acl_table[table]["type"] != upd_acl_table[table]["type"]
         ]
 
-        old_aclrule = old_config.get("ACL_RULE", {})
-        upd_aclrule = upd_config.get("ACL_RULE", {})
+        old_acl_rule = old_config.get("ACL_RULE", {})
+        upd_acl_rule = upd_config.get("ACL_RULE", {})
 
         # Pick rules with its dependent table which has "type" replaced
-        old_daclrule = [rule for rule in old_aclrule
-                        if rule.split("|")[0] in modified_common_dacltable]
-        upd_daclrule = [rule for rule in upd_aclrule
-                        if rule.split("|")[0] in modified_common_dacltable]
+        old_dacl_rule = [rule for rule in old_acl_rule
+                        if rule.split("|")[0] in modified_common_dacl_table]
+        upd_dacl_rule = [rule for rule in upd_acl_rule
+                        if rule.split("|")[0] in modified_common_dacl_table]
 
         # Block changes if acl rule change on tables with "type" replaced
-        for key in set(old_daclrule).union(set(upd_daclrule)):
-            if (old_aclrule.get(key, {}) != upd_aclrule.get(key, {})):
-                raise IllegalPatchOperationError("Modification of dataacl table is illegal")
+        for key in set(old_dacl_rule).union(set(upd_dacl_rule)):
+            if (old_acl_rule.get(key, {}) != upd_acl_rule.get(key, {})):
+                raise IllegalPatchOperationError(
+                    "Modification of dataacl rule {} is illegal: \
+                        acl table type changed in {}".format(
+                            key, modified_common_dacl_table
+                    ))
 
     def validate_lanes(self, config_db):
         if "PORT" not in config_db:

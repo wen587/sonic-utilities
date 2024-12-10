@@ -188,7 +188,7 @@ class TestValidateFieldOperation(unittest.TestCase):
         config_wrapper = gu_common.ConfigWrapper()
         self.assertRaises(gu_common.IllegalPatchOperationError, config_wrapper.validate_field_operation, old_config, target_config)
 
-    def test_validate_field_operation_illegal__dataacl_table_type_and_rule(self):
+    def test_validate_field_operation_illegal__dataacl_table_type_update_and_rule_change(self):
         old_config = {
             "ACL_TABLE": {
                 "OPENAI_INGRESS": {
@@ -217,7 +217,7 @@ class TestValidateFieldOperation(unittest.TestCase):
         self.assertRaises(gu_common.IllegalPatchOperationError,
                           config_wrapper.validate_field_operation, old_config, target_config)
 
-    def test_validate_field_operation_legal__dataacl_table_type_update(self):
+    def test_validate_field_operation_legal__only_dataacl_table_type_update(self):
         old_config = {
             "ACL_TABLE": {
                 "OPENAI_INGRESS": {
@@ -245,7 +245,7 @@ class TestValidateFieldOperation(unittest.TestCase):
         config_wrapper = gu_common.ConfigWrapper()
         config_wrapper.validate_field_operation(old_config, target_config)
 
-    def test_validate_field_operation_legal__dataacl_rule_update(self):
+    def test_validate_field_operation_legal__only_dataacl_rule_update(self):
         old_config = {
             "ACL_TABLE": {
                 "OPENAI_INGRESS": {
