@@ -191,24 +191,24 @@ class TestValidateFieldOperation(unittest.TestCase):
     def test_validate_field_operation_illegal__dataacl_table_type_update_and_rule_change(self):
         old_config = {
             "ACL_TABLE": {
-                "OPENAI_INGRESS": {
+                "TEST_INGRESS": {
                     "type": "L2"
                 }
             },
             "ACL_RULE": {
-                "OPENAI_INGRESS|RULE_1": {
+                "TEST_INGRESS|RULE_1": {
                     "ETHER_TYPE": "2048"
                 }
             }
         }
         target_config = {
             "ACL_TABLE": {
-                "OPENAI_INGRESS": {
+                "TEST_INGRESS": {
                     "type": "L3V6"
                 }
             },
             "ACL_RULE": {
-                "OPENAI_INGRESS|RULE_1": {
+                "TEST_INGRESS|RULE_1": {
                     "IP_TYPE": "IPV6ANY"
                 }
             }
@@ -220,24 +220,24 @@ class TestValidateFieldOperation(unittest.TestCase):
     def test_validate_field_operation_legal__only_dataacl_table_type_update(self):
         old_config = {
             "ACL_TABLE": {
-                "OPENAI_INGRESS": {
+                "TEST_INGRESS": {
                     "type": "L3"
                 }
             },
             "ACL_RULE": {
-                "OPENAI_INGRESS|RULE_1": {
+                "TEST_INGRESS|RULE_1": {
                     "IP_TYPE": "IPV6ANY"
                 }
             }
         }
         target_config = {
             "ACL_TABLE": {
-                "OPENAI_INGRESS": {
+                "TEST_INGRESS": {
                     "type": "L3V6"
                 }
             },
             "ACL_RULE": {
-                "OPENAI_INGRESS|RULE_1": {
+                "TEST_INGRESS|RULE_1": {
                     "IP_TYPE": "IPV6ANY"
                 }
             }
@@ -248,24 +248,24 @@ class TestValidateFieldOperation(unittest.TestCase):
     def test_validate_field_operation_legal__only_dataacl_rule_update(self):
         old_config = {
             "ACL_TABLE": {
-                "OPENAI_INGRESS": {
+                "TEST_INGRESS": {
                     "type": "L3"
                 }
             },
             "ACL_RULE": {
-                "OPENAI_INGRESS|RULE_1": {
+                "TEST_INGRESS|RULE_1": {
                     "IP_TYPE": "IPV6ANY"
                 }
             }
         }
         target_config = {
             "ACL_TABLE": {
-                "OPENAI_INGRESS": {
+                "TEST_INGRESS": {
                     "type": "L3"
                 }
             },
             "ACL_RULE": {
-                "OPENAI_INGRESS|RULE_1": {
+                "TEST_INGRESS|RULE_1": {
                     "IP_TYPE": "IPV4ANY"
                 }
             }
