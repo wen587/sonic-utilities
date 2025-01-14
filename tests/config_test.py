@@ -1194,7 +1194,7 @@ class TestLoadMinigraph(object):
 
     @mock.patch('sonic_py_common.device_info.get_paths_to_platform_and_hwsku_dirs',
                 mock.MagicMock(return_value=("dummy_path", None)))
-    def test_load_minigraph_hard_dependency_check(self, get_cmd_module):
+    def test_load_minigraph_no_yang_failure(self, get_cmd_module):
         def is_file_side_effect(filename):
             return True if 'golden_config' in filename else False
 
